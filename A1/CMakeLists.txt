@@ -15,6 +15,10 @@ set(OpenGL_GL_PREFERENCE GLVND)
 # https://github.com/adishavit/argh/releases/tag/v1.3.1
 include_directories(SYSTEM thirdparty/argh-1.3.1/)
 
+#-------------- added ------------------
+include_directories(SYSTEM imgui)
+
+
 #-------------------------------------------------------------------------------
 # https://glad.dav1d.de/
 add_subdirectory(thirdparty/glad-opengl-3.3-core)

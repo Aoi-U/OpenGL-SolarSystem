@@ -12,9 +12,9 @@
 #include "Window.h"
 #include "AssetPath.h"
 
-// #include "imgui.h"
-// #include "imgui_impl_glfw.h"
-// #include "imgui_impl_opengl3.h"
+#include "imgui.h"
+//#include "imgui_impl_glfw.h"
+//#include "imgui_impl_opengl3.h"
 
 const double PI = 3.14159265358979323846;
 
@@ -364,6 +364,12 @@ int main() {
 
 	GLDebug::enable(); // ON Submission you may comments this out to avoid unnecessary prints to the console
 
+	IMGUI_CHECKVERSION();
+	//ImGui::CreateContext();
+	//ImGuiIO& io = ImGui::GetIO(); (void)io;
+	//ImGui::StyleColorsDark();
+	//ImGui_ImplGlfw_InitForOpenGL(window.getGLFWwindow(), true);
+
 	// SHADERS
 	ShaderProgram shader(
 		AssetPath::Instance()->Get("shaders/basic.vert"), 
@@ -388,13 +394,6 @@ int main() {
 	CPU_Geometry cpuGeom; // Just a collection of vectors
 	GPU_Geometry gpuGeom; // Wrapper managing VAO and VBOs, in a TIGHTLY packed format
 	//https://www.khronos.org/opengl/wiki/Vertex_Specification_Best_Practices#Attribute_sizes
-
-	// IMGUI_CHECKVERSION();
-	// ImGui::CreateContext();
-	// ImGuiIO& io = ImGui::GetIO(); (void)io;
-	// ImGui::StyleColorsDark();
-	// ImGui_ImplGlfw_InitForOpenGL(window.getGLFWwindow(), true);
-	// ImGui_ImplOpenGL3_Init("#version 330");
 
 	while (!window.shouldClose()) {
 		glfwPollEvents(); // Propagate events to the callback class
