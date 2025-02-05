@@ -200,10 +200,18 @@ std::vector<levy> calculate_levy(cord start, double length, double alpha, double
 	return result;
 }
 
-std::vector<tree> calculate_tree(cord start, double length, double alpha, double iteration, int max_iteration) {
-	// if before 4 iterations, color the tree brown, otherwise color the tree green
+// contains only parameters necessary for the bonus marks from the assignment
+struct bonus_params {
+	float angle = 25.7; // Lateral branch angle
+	float scale = 0.5; // branch scaling factor
+	float interpolation_factor = 0.5; // lateral branch interpolation factor
+	int color_depth = 4; // leaf color depth
+};
+
+std::vector<tree> calculate_tree(cord start, double length, double alpha, int iteration, int max_iteration, bonus_params bonus) {
+	// if before 4 (or user defined depth) iterations, color the tree brown, otherwise color the tree green
 	color col;
-	if (iteration < max_iteration - 3) {
+	if (iteration < max_iteration - (bonus.color_depth - 1)) {
 		col = {0.1, 0.5, 0.1};
 	} else {
 		col = {0.5, 0.3, 0.1};
@@ -231,18 +239,20 @@ std::vector<tree> calculate_tree(cord start, double length, double alpha, double
 		col
 	};
 
-	length /= 2;
+	// scale the length by half (or user defined value)
+	length *= bonus.scale;
 
+	// find the mid point (or user defined point) of a line segment
 	cord mid {
-		(branch.start.x + branch.end.x) / 2,
-		(branch.start.y + branch.end.y) / 2
+		(branch.start.x + branch.end.x) * bonus.interpolation_factor,
+		(branch.start.y + branch.end.y) * bonus.interpolation_factor
 	};
 
 	tree left_branch {
 		mid, 
 		{
-			mid.x + length * cos(alpha + 25.7 * (glm::pi<double>() / 180)),
-			mid.y + length * sin(alpha + 25.7 * (glm::pi<double>() / 180))
+			mid.x + length * cos(alpha + bonus.angle * (glm::pi<double>() / 180)),
+			mid.y + length * sin(alpha + bonus.angle * (glm::pi<double>() / 180))
 		},
 		col
 	};
@@ -250,8 +260,8 @@ std::vector<tree> calculate_tree(cord start, double length, double alpha, double
 	tree right_branch {
 		mid,
 		{
-			mid.x + length * cos(alpha - 25.7 * (glm::pi<double>() / 180)),
-			mid.y + length * sin(alpha - 25.7 * (glm::pi<double>() / 180))
+			mid.x + length * cos(alpha - bonus.angle * (glm::pi<double>() / 180)),
+			mid.y + length * sin(alpha - bonus.angle * (glm::pi<double>() / 180))
 		},
 		col
 	};
@@ -267,9 +277,9 @@ std::vector<tree> calculate_tree(cord start, double length, double alpha, double
 
 	iteration--;
 
-	std::vector<tree> result_left = calculate_tree(left_branch.start, length, alpha + 25.7 * (glm::pi<double>() /180), iteration, max_iteration);
-	std::vector<tree> result_right = calculate_tree(right_branch.start, length, alpha - 25.7 * (glm::pi<double>() /180), iteration, max_iteration);
-	std::vector<tree> result_top = calculate_tree(top_branch.start, length, alpha, iteration, max_iteration);
+	std::vector<tree> result_left = calculate_tree(left_branch.start, length, alpha + bonus.angle * (glm::pi<double>() /180), iteration, max_iteration, bonus);
+	std::vector<tree> result_right = calculate_tree(right_branch.start, length, alpha - bonus.angle * (glm::pi<double>() /180), iteration, max_iteration, bonus);
+	std::vector<tree> result_top = calculate_tree(top_branch.start, length, alpha, iteration, max_iteration, bonus);
 
 	std::vector<tree> result {branch};
 	result.insert(result.end(), result_left.begin(), result_left.end());
@@ -318,9 +328,9 @@ void render_levy(CPU_Geometry& cpuGeom, int iterations) {
 	}
 }
 
-void render_tree(CPU_Geometry& cpuGeom, int iterations) {
+void render_tree(CPU_Geometry& cpuGeom, int iterations, bonus_params bonus) {
 	// call calculate_tree to get all vertices of the tree
-	std::vector<tree> trees = calculate_tree({0.f, -0.8f}, 0.8f, glm::pi<double>() / 2, iterations, iterations);
+	std::vector<tree> trees = calculate_tree({0.f, -0.8f}, 0.8f, glm::pi<double>() / 2, iterations, iterations, bonus);
 
 	for (const tree& branch : trees) {
 		cpuGeom.verts.push_back(glm::vec3(branch.start.x, branch.start.y, 0.f));
@@ -360,14 +370,11 @@ int main() {
 	int iterations = 0;
 	int shape = 0;
 	int prevShape = shape;
+	bonus_params bonus;
 
 	std::string shapeName = "Serpinski's Triangle";
 
-	// CALLBACKS
-	// std::shared_ptr<MyCallbacks> callback_ptr = std::make_shared<MyCallbacks>(shader); // Class To capture input events
-	// //std::shared_ptr<MyCallbacks2> callback2_ptr = std::make_shared<MyCallbacks2>();
-	// window.setCallbacks(callback_ptr); // Can also update callbacks to new ones as needed (create more than one instance)
-
+	// UNCOMMENT THE BELOW 2 LINES FOR KEYCALLBACKS
 	//std::shared_ptr<KeyPresses> callback_ptr = std::make_shared<KeyPresses>(iterations, shape, max_iterations);
 	//window.setCallbacks(callback_ptr);
 
@@ -411,7 +418,7 @@ int main() {
 				nVerts = calculate_num_vertices(iterations, shape);
 				max_iterations = 10;
 				shapeName = "Tree";
-				render_tree(cpuGeom, iterations);
+				render_tree(cpuGeom, iterations, bonus);
 				break;
 		}
 
@@ -431,6 +438,13 @@ int main() {
 		ImGui::Text("Hello world!");
 		ImGui::SliderInt("Shape", &shape, 0, 2, shapeName.c_str());
 		ImGui::SliderInt("Iteration", &iterations, 0, max_iterations, std::to_string(iterations).c_str());
+		// enable extra tree customization values if on the tree fractal
+		if (shape == 2) {
+			ImGui::SliderFloat("Branch Angle", &bonus.angle, 0, 180, (std::to_string(bonus.angle) + "Degrees").c_str());
+			ImGui::SliderFloat("Branch Scale", &bonus.scale, 0, 1, std::to_string(bonus.scale).c_str());
+			ImGui::SliderFloat("Anchor Factor", &bonus.interpolation_factor, 0, 1, std::to_string(bonus.interpolation_factor).c_str());
+			ImGui::SliderInt("Color Depth", &bonus.color_depth, 0, 11, std::to_string(bonus.color_depth).c_str());
+		}
 		ImGui::End();
 
 		ImGui::Render();
