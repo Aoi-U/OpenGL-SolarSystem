@@ -13,7 +13,7 @@ Compiler: Microsoft (R) C/C++ Optimizing Compiler Version 19.29.30158 for x86
 
 Running the program:
 Navigate to the root folder then in the terminal
-mkdir build
-cmake ..
-cmake --build . --config Release
-./Release/453-skeleton.exe
+```mkdir build```
+```cmake ..```
+```cmake --build . --config Release```
+```./Release/453-skeleton.exe```
