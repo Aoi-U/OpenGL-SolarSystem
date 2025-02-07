@@ -52,12 +52,6 @@ private:
 	int& max_iterations;
 };
 
-// defines a point with x and y values
-struct cord {
-	double x;
-	double y;
-};
-
 // defines a color with r, g, and b values
 struct color {
 	double r;
@@ -65,31 +59,13 @@ struct color {
 	double b;
 };
 
-// defines a triangle with 3 vertices and the color of its triangle
-struct triangle {
-	cord left; // bottom left corner
-	cord right; // bottom right corner
-	cord top; // top corner
-};
-
-struct levy {
-	cord start; // starting point of a line segment
-	cord end; // end point of a line segment
-};
-
-struct tree {
-	cord start;
-	cord end;
-	color col;
-};
-
 // calculates the number of vertices for x iterations
 int calculate_num_vertices(int iteration, int shape) {
 	switch (shape) {
 		case 0:
-			return 3 * glm::pow(3, iteration);
+			return 3 * int(glm::pow(3, iteration));
 		case 1:
-			return 2 * glm::pow(2, iteration);
+			return 2 * int(glm::pow(2, iteration));
 		case 2:
 			int previous = 2;
 			for (int i = 0; i < iteration; i++) {
@@ -132,6 +108,7 @@ std::vector<glm::vec3> calculate_triangle(glm::vec3 left, double length, double 
 	return result;	
 }
 
+// recursive function to calculate all vertices of the levy C curve
 std::vector<glm::vec3> calculate_levy(glm::vec3 start, double length, double alpha, double iteration) {
 	// base case, return a single line from points start to end
 	if (iteration == 0) {
@@ -159,20 +136,23 @@ std::vector<glm::vec3> calculate_levy(glm::vec3 start, double length, double alp
 	return result;
 }
 
-// contains only parameters necessary for the bonus marks from the assignment
+// this struct contains parameters necessary for the bonus marks from the assignment
+// initialized to default values 
 struct bonus_params {
-	float angle = 25.7; // Lateral branch angle
-	float scale = 0.5; // branch scaling factor
-	float interpolation_factor = 0.5; // lateral branch interpolation factor
+	float angle = 25.7f; // Lateral branch angle
+	float scale = 0.5f; // branch scaling factor
+	float interpolation_factor = 0.5f; // lateral branch interpolation factor
 	int color_depth = 4; // leaf color depth
 };
 
-std::vector<std::pair<glm::vec3, color>> calculate_tree(glm::vec3 start, double length, double alpha, int iteration, int max_iteration, bonus_params bonus) {	
-	color col;
+// recursive function to calculate all vertices of the tree
+std::vector<glm::vec3> calculate_tree(glm::vec3 start, double length, double alpha, int iteration, int max_iteration, bonus_params bonus) {	
+	// if before iteration 4 (or user defined color depth), set the color to brown. green otherwise
+	glm::vec3 col;
 	if (iteration < max_iteration - (bonus.color_depth - 1)) {
-		col = {0.1, 0.5, 0.1};
+		col = {0.1f, 0.5f, 0.1f};
 	} else {
-		col = {0.5, 0.3, 0.1};
+		col = {0.5f, 0.3f, 0.1f};
 	}
 
 	// calculate the end point of the branch
@@ -182,9 +162,9 @@ std::vector<std::pair<glm::vec3, color>> calculate_tree(glm::vec3 start, double 
 		0.f
 	};
 
-	// base case, return a single branch from start to end
+	// base case, return a single branch from start to end with its color
 	if (iteration == 0) {
-		return {{start, col}, {end, col}};
+		return {start, end, col};
 	}
 
 	// calculate the mid point (or user defined point by interpolation_factor) of a line segment
@@ -198,12 +178,12 @@ std::vector<std::pair<glm::vec3, color>> calculate_tree(glm::vec3 start, double 
 	// scale the length of the branch by 0.5 (or user defined scale)
 	length *= bonus.scale;
 	// recursively call calculate_tree for each subbranch
-	std::vector<std::pair<glm::vec3, color>> result_left = calculate_tree(mid, length, alpha + glm::radians(bonus.angle), iteration, max_iteration, bonus);
-	std::vector<std::pair<glm::vec3, color>> result_right = calculate_tree(mid, length, alpha - glm::radians(bonus.angle), iteration, max_iteration, bonus);
-	std::vector<std::pair<glm::vec3, color>> result_top = calculate_tree(end, length, alpha, iteration, max_iteration, bonus);
+	std::vector<glm::vec3> result_left = calculate_tree(mid, length, alpha + glm::radians(bonus.angle), iteration, max_iteration, bonus);
+	std::vector<glm::vec3> result_right = calculate_tree(mid, length, alpha - glm::radians(bonus.angle), iteration, max_iteration, bonus);
+	std::vector<glm::vec3> result_top = calculate_tree(end, length, alpha, iteration, max_iteration, bonus);
 
 	// combine all branches into a single vector and return
-	std::vector<std::pair<glm::vec3, color>> result {{start, col}, {end, col}};
+	std::vector<glm::vec3> result {start, end, col};
 	result.insert(result.end(), result_left.begin(), result_left.end());
 	result.insert(result.end(), result_right.begin(), result_right.end());
 	result.insert(result.end(), result_top.begin(), result_top.end());
@@ -211,8 +191,8 @@ std::vector<std::pair<glm::vec3, color>> calculate_tree(glm::vec3 start, double 
 	return result;
 }
 
-// render serpinski triangle
-void render_serpinski(CPU_Geometry& cpuGeom, int iterations) {
+// sets the vertices and colors for each sub triangle in the serpinski's triangle
+void generate_serpinski(CPU_Geometry& cpuGeom, int iterations) {
 	// call calculate_triangle to get all vertices of triangles
 	std::vector<glm::vec3> triangles = calculate_triangle(glm::vec3(-0.8f, -0.8f, 0.f), 1.6f, iterations);
 
@@ -232,7 +212,8 @@ void render_serpinski(CPU_Geometry& cpuGeom, int iterations) {
 	}
 }
 
-void render_levy(CPU_Geometry& cpuGeom, int iterations) {
+// sets the vertices and colors for each line segment within the levy c curve
+void generate_levy(CPU_Geometry& cpuGeom, int iterations) {
 	// call calculate_levy to get all vertices of the levy c curve
 	std::vector<glm::vec3> levys = calculate_levy({0.f, -0.4f, 0.f}, 0.8f, glm::pi<double>() / 2, iterations);
 
@@ -249,22 +230,20 @@ void render_levy(CPU_Geometry& cpuGeom, int iterations) {
 		cpuGeom.cols.push_back(glm::vec3(1.f - current, current, 0.f));
 	}
 }
-
-void render_tree(CPU_Geometry& cpuGeom, int iterations, bonus_params bonus) {
+ 
+// sets the vertices and colors for each line segment within the tree
+void generate_tree(CPU_Geometry& cpuGeom, int iterations, bonus_params bonus) {
 	// call calculate_tree to get all vertices of the tree
-	std::vector<std::pair<glm::vec3, color>> trees = calculate_tree({0.f, -0.8f, 0.f}, 0.8f, glm::pi<double>() / 2, iterations, iterations, bonus);
-
-	// calculate the vertex number where the color changes
+	std::vector<glm::vec3> trees = calculate_tree({0.f, -0.8f, 0.f}, 0.8f, glm::pi<double>() / 2, iterations, iterations, bonus);
 
 	// for each branch, add its vertices and color to cpuGeom
 	for (int i = 0; i < trees.size(); i++) {
-		cpuGeom.verts.push_back(trees[i].first);
-		cpuGeom.cols.push_back(glm::vec3(trees[i].second.r, trees[i].second.g, trees[i].second.b));
+		cpuGeom.verts.push_back(trees[i]);
+		cpuGeom.verts.push_back(trees[++i]);
 
-		cpuGeom.verts.push_back(trees[++i].first);
-		cpuGeom.cols.push_back(glm::vec3(trees[i].second.r, trees[i].second.g, trees[i].second.b));
+		cpuGeom.cols.push_back(trees[++i]);
+		cpuGeom.cols.push_back(trees[i]);
 	}
-	
 }
 
 int main() {
@@ -276,7 +255,7 @@ int main() {
 
 	GLDebug::enable(); // ON Submission you may comments this out to avoid unnecessary prints to the console
 
-	// Setup Dear ImGui context
+	// Setup ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -290,13 +269,14 @@ int main() {
 		AssetPath::Instance()->Get("shaders/basic.frag")
 	); // Render pipeline we will use (You can use more than one!)
 
-	// default values for render mode, iterations, and shape
-	int render_mode = GL_TRIANGLES; // Default to triangle
-	int max_iterations = 10;
-	int iterations = 0;
-	int shape = 0;
+	// set default values
+	int render_mode = GL_TRIANGLES; // default to triangle 
+	int max_iterations = 10; // max number of iterations for serpinskis triangle
+	int iterations = 0; // the current iteration count
+	int shape = 0; // the current shape (0 = triangle, 1 = levy c curve, 2 = tree)
 	int prevShape = shape;
-	bonus_params bonus;
+	int nVerts = 0; // the number of vertices for a certain shape
+	bonus_params bonus; // initialize default values for the bonus portion of the assignment
 
 	std::string shapeName = "Serpinski's Triangle";
 
@@ -318,34 +298,37 @@ int main() {
 
 		cpuGeom.verts.clear();
 		cpuGeom.cols.clear();
-		int nVerts = 0;
 
+		// reset the iteration to 0 when the user changes shape
+		// implemented because program would crash when changing shape after setting iteration >10 on levy c curve
 		if (prevShape != shape) {
 			iterations = 0;
 			prevShape = shape;
 			bonus = {};
 		}
+		
+		// calculates the necessary vertices based on current shape
 		switch (shape) {
-			case 0:
-				render_mode = GL_TRIANGLES;
+			case 0: // serpinski's triangle
+				render_mode = GL_TRIANGLES; 
 				nVerts = calculate_num_vertices(iterations, shape);
-				max_iterations = 9;
+				max_iterations = 10;
 				shapeName = "Serpinski's Triangle";
-				render_serpinski(cpuGeom, iterations);
+				generate_serpinski(cpuGeom, iterations);
 				break;
-			case 1:
+			case 1: // levy C curve
 				render_mode = GL_LINES;
 				nVerts = calculate_num_vertices(iterations, shape);
 				max_iterations = 15;
 				shapeName = "C Levy Curve";
-				render_levy(cpuGeom, iterations);
+				generate_levy(cpuGeom, iterations);
 				break;
-			case 2:
+			case 2: // tree
 				render_mode = GL_LINES;
 				nVerts = calculate_num_vertices(iterations, shape);
 				max_iterations = 10;
 				shapeName = "Tree";
-				render_tree(cpuGeom, iterations, bonus);
+				generate_tree(cpuGeom, iterations, bonus);
 				break;
 		}
 
@@ -358,11 +341,10 @@ int main() {
 		glEnable(GL_FRAMEBUFFER_SRGB); // Expect Colour to be encoded in sRGB standard (as opposed to RGB) 
 		// https://www.viewsonic.com/library/creative-work/srgb-vs-adobe-rgb-which-one-to-use/
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear render screen (all zero) and depth (all max depth)
-		glDrawArrays(render_mode, 0, nVerts); // Render Triangle primatives, starting at index 0 (first) with a total of nVerts
+		glDrawArrays(render_mode, 0, nVerts); // Render render_mode primatives, starting at index 0 (first) with a total of nVerts
 		glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui (if used)
 
 		ImGui::Begin("Bonus Points");
-		// show fps
 		ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
 		if (ImGui::Button("Reset Parameters")) {
 			iterations = 0;
