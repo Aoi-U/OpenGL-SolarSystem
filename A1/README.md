@@ -1,3 +1,6 @@
+CPSC453 Assignment 1
+Aoi Ueki 30179305
+
 This program is controlled using the mouse on a ImGui window. 
 Click/hold and drag the bars to change shape, iteration values, etc. 
 The values for bonus points will show up when on the tree shape. 
