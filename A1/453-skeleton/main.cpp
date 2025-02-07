@@ -27,12 +27,10 @@ public:
 		if (key == GLFW_KEY_UP && action == GLFW_PRESS) {
 			if (iterations < max_iterations) {
 				iterations++;
-				std::cout << "Iterations: " << iterations << std::endl;
 			}
 		} else if (key == GLFW_KEY_DOWN && action == GLFW_PRESS) {
 			if (iterations > 0) {
 				iterations--;
-				std::cout << "Iterations: " << iterations << std::endl;
 			}
 		} else if (key == GLFW_KEY_LEFT && action == GLFW_PRESS) {
 			if (shape > 0) {
