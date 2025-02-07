@@ -85,17 +85,16 @@ std::vector<glm::vec3> calculate_triangle(glm::vec3 left, double length, double 
 		return result;
 	}
 
-	// calculate the midpoints of each side of the triangle
+	// calculate the midpoints of the left and bottom sides of the triangle
 	glm::vec3 left_mid = (left + top) / 2.f;
-	glm::vec3 right_mid = (right + top) / 2.f;
-	glm::vec3 top_mid = (left + right) / 2.f;
+	glm::vec3 bottom_mid = (left + right) / 2.f;
 
 	iteration--;
 
 	// recursively call calculate_triangle for each subtriangle
 	std::vector<glm::vec3> result_left = calculate_triangle(left, length / 2, iteration);
 	std::vector<glm::vec3> result_right = calculate_triangle(left_mid, length / 2, iteration);
-	std::vector<glm::vec3> result_top = calculate_triangle(top_mid, length / 2, iteration);
+	std::vector<glm::vec3> result_top = calculate_triangle(bottom_mid, length / 2, iteration);
 
 	// combine all vertices into a single vector and return
 	std::vector<glm::vec3> result {};
