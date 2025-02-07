@@ -87,9 +87,9 @@ struct tree {
 int calculate_num_vertices(int iteration, int shape) {
 	switch (shape) {
 		case 0:
-			return 3 * int(pow(3, iteration));
+			return 3 * glm::pow(3, iteration);
 		case 1:
-			return 2 * int(pow(2, iteration));
+			return 2 * glm::pow(2, iteration);
 		case 2:
 			int previous = 2;
 			for (int i = 0; i < iteration; i++) {
@@ -102,98 +102,57 @@ int calculate_num_vertices(int iteration, int shape) {
 }
 
 // recursive function to calculate all vertices of triangles
-std::vector<triangle> calculate_triangle(cord left, double length, double iteration) {
-	// base case, return a single triangle
+std::vector<glm::vec3> calculate_triangle(glm::vec3 left, double length, double iteration) {
+	// base case, return a single triangle with vertices left, right, and top
+	glm::vec3 right = left + glm::vec3(length, 0.f, 0.f);
+	glm::vec3 top = left + glm::vec3(length / 2, length * sqrt(3) / 2, 0.f);
 	if (iteration == 0) {
-		return {
-			{
-				left, // bottom left corner
-				{left.x + length, left.y}, // bottom right corner 
-				{left.x + length / 2, left.y + length * sin(glm::pi<double>() / 3)} // top corner
-			}
-		};
+		std::vector<glm::vec3> result {left, right, top};
+		return result;
 	}
 
-	// calculates points for the left subtriangle
-	triangle triangle_left {
-		left,
-		{left.x + length / 2, left.y},
-		{left.x + length / 4, left.y + length / 2 * sin(glm::pi<double>() / 3)}
-	};
-
-	// calculates points for the right subtriangle
-	triangle triangle_right {
-		triangle_left.right,
-		{triangle_left.right.x + length, triangle_left.right.y},
-		{triangle_left.right.x + length / 2, triangle_left.right.y + length * sin(glm::pi<double>() / 3)}
-	};
-
-	// calculates points for the top subtriangle
-	triangle triangle_top {
-		triangle_left.top,
-		triangle_right.top,
-		{triangle_left.top.x + length / 2, triangle_left.top.y + length * sin(glm::pi<double>() / 3)}
-	};
+	// calculate the midpoints of each side of the triangle
+	glm::vec3 left_mid = (left + top) / 2.f;
+	glm::vec3 right_mid = (right + top) / 2.f;
+	glm::vec3 top_mid = (left + right) / 2.f;
 
 	iteration--;
-	length /= 2;
 
 	// recursively call calculate_triangle for each subtriangle
-	std::vector<triangle> result_left = calculate_triangle(triangle_left.left, length, iteration);
-	std::vector<triangle> result_right = calculate_triangle(triangle_left.right, length, iteration);
-	std::vector<triangle> result_top = calculate_triangle(triangle_left.top, length, iteration);
+	std::vector<glm::vec3> result_left = calculate_triangle(left, length / 2, iteration);
+	std::vector<glm::vec3> result_right = calculate_triangle(left_mid, length / 2, iteration);
+	std::vector<glm::vec3> result_top = calculate_triangle(top_mid, length / 2, iteration);
 
-	// combine all triangles into a single vector and return 
-	std::vector<triangle> result {};
+	// combine all vertices into a single vector and return
+	std::vector<glm::vec3> result {};
 	result.insert(result.end(), result_left.begin(), result_left.end());
 	result.insert(result.end(), result_right.begin(), result_right.end());
 	result.insert(result.end(), result_top.begin(), result_top.end());
 
-	return result;
+	return result;	
 }
 
-std::vector<levy> calculate_levy(cord start, double length, double alpha, double iteration) {
+std::vector<glm::vec3> calculate_levy(glm::vec3 start, double length, double alpha, double iteration) {
 	// base case, return a single line from points start to end
 	if (iteration == 0) {
-		return {
-			{
-				start,
-				{
-					start.x + length * cos(alpha),
-					start.y + length * sin(alpha)
-				}
-			}
-		};
+		return {start, glm::vec3(start.x + length * glm::cos(alpha), start.y + length * glm::sin(alpha), 0.f)};
 	}
 
-	length *= sqrt(2) / 2;
-
-	// calculates points for the first subline
-	levy first {
-		start,
-		{
-			start.x + length * cos(alpha + glm::pi<double>() / 4),
-			start.y + length * sin(alpha + glm::pi<double>() / 4)
-		}
+	length *= glm::sqrt(2) / 2;
+	// calculate the mid point of the line segment
+	glm::vec3 mid {
+		start.x + length * glm::cos(alpha + glm::pi<double>() / 4),
+		start.y + length * glm::sin(alpha + glm::pi<double>() / 4),
+		0.f
 	};
 
-	// calculates points for the second subline
-	levy second {
-		first.end,
-		{
-			first.end.x + length * cos(alpha + glm::pi<double>() / 4),
-			first.end.y + length * sin(alpha + glm::pi<double>() / 4)
-		}
-	};
-	
 	iteration--;
-
-	// recursively call calculate_levy for each subline
-	std::vector<levy> result_first = calculate_levy(first.start, length, alpha + glm::pi<double>() / 4, iteration);
-	std::vector<levy> result_second = calculate_levy(second.start, length, alpha - glm::pi<double>() / 4, iteration);
+	// recursively call calculate_levy for each subline segment
+	std::vector<glm::vec3> result_first = calculate_levy(start, length, alpha + glm::pi<double>() / 4, iteration);
+	std::vector<glm::vec3> result_second = calculate_levy(mid, length, alpha - glm::pi<double>() / 4, iteration);
 
 	// combine all line segments into a single vector and return
-	std::vector<levy> result {};
+	std::vector<glm::vec3> result {};
 	result.insert(result.end(), result_first.begin(), result_first.end());
 	result.insert(result.end(), result_second.begin(), result_second.end());
 
@@ -208,80 +167,43 @@ struct bonus_params {
 	int color_depth = 4; // leaf color depth
 };
 
-std::vector<tree> calculate_tree(cord start, double length, double alpha, int iteration, int max_iteration, bonus_params bonus) {
-	// if before 4 (or user defined depth) iterations, color the tree brown, otherwise color the tree green
+std::vector<std::pair<glm::vec3, color>> calculate_tree(glm::vec3 start, double length, double alpha, int iteration, int max_iteration, bonus_params bonus) {	
 	color col;
 	if (iteration < max_iteration - (bonus.color_depth - 1)) {
 		col = {0.1, 0.5, 0.1};
 	} else {
 		col = {0.5, 0.3, 0.1};
 	}
+
+	// calculate the end point of the branch
+	glm::vec3 end {
+		start.x + length * glm::cos(alpha),
+		start.y + length * glm::sin(alpha),
+		0.f
+	};
+
 	// base case, return a single branch from start to end
 	if (iteration == 0) {
-		return {
-			{
-				start,
-				{
-					start.x + length * cos(alpha),
-					start.y + length * sin(alpha)
-				},
-				col
-			}
-		};
+		return {{start, col}, {end, col}};
 	}
 
-	tree branch {
-		start,
-		{
-			start.x + length * cos(alpha),
-			start.y + length * sin(alpha)
-		},
-		col
-	};
-
-	// scale the length by half (or user defined value)
-	length *= bonus.scale;
-
-	// find the mid point (or user defined point) of a line segment
-	cord mid {
-		(branch.start.x + branch.end.x) * bonus.interpolation_factor,
-		(branch.start.y + branch.end.y) * bonus.interpolation_factor
-	};
-
-	tree left_branch {
-		mid, 
-		{
-			mid.x + length * cos(alpha + bonus.angle * (glm::pi<double>() / 180)),
-			mid.y + length * sin(alpha + bonus.angle * (glm::pi<double>() / 180))
-		},
-		col
-	};
-
-	tree right_branch {
-		mid,
-		{
-			mid.x + length * cos(alpha - bonus.angle * (glm::pi<double>() / 180)),
-			mid.y + length * sin(alpha - bonus.angle * (glm::pi<double>() / 180))
-		},
-		col
-	};
-
-	tree top_branch {
-		branch.end,
-		{
-			branch.end.x + length * cos(alpha),
-			branch.end.y + length * sin(alpha)
-		},
-		col
+	// calculate the mid point (or user defined point by interpolation_factor) of a line segment
+	glm::vec3 mid {
+		start.x + bonus.interpolation_factor * (end.x - start.x),
+		start.y + bonus.interpolation_factor * (end.y - start.y),
+		0.f
 	};
 
 	iteration--;
+	// scale the length of the branch by 0.5 (or user defined scale)
+	length *= bonus.scale;
+	// recursively call calculate_tree for each subbranch
+	std::vector<std::pair<glm::vec3, color>> result_left = calculate_tree(mid, length, alpha + glm::radians(bonus.angle), iteration, max_iteration, bonus);
+	std::vector<std::pair<glm::vec3, color>> result_right = calculate_tree(mid, length, alpha - glm::radians(bonus.angle), iteration, max_iteration, bonus);
+	std::vector<std::pair<glm::vec3, color>> result_top = calculate_tree(end, length, alpha, iteration, max_iteration, bonus);
 
-	std::vector<tree> result_left = calculate_tree(left_branch.start, length, alpha + bonus.angle * (glm::pi<double>() /180), iteration, max_iteration, bonus);
-	std::vector<tree> result_right = calculate_tree(right_branch.start, length, alpha - bonus.angle * (glm::pi<double>() /180), iteration, max_iteration, bonus);
-	std::vector<tree> result_top = calculate_tree(top_branch.start, length, alpha, iteration, max_iteration, bonus);
-
-	std::vector<tree> result {branch};
+	// combine all branches into a single vector and return
+	std::vector<std::pair<glm::vec3, color>> result {{start, col}, {end, col}};
 	result.insert(result.end(), result_left.begin(), result_left.end());
 	result.insert(result.end(), result_right.begin(), result_right.end());
 	result.insert(result.end(), result_top.begin(), result_top.end());
@@ -292,17 +214,17 @@ std::vector<tree> calculate_tree(cord start, double length, double alpha, int it
 // render serpinski triangle
 void render_serpinski(CPU_Geometry& cpuGeom, int iterations) {
 	// call calculate_triangle to get all vertices of triangles
-	std::vector<triangle> triangles = calculate_triangle({-0.8f, -0.8f}, 1.6f, iterations);
+	std::vector<glm::vec3> triangles = calculate_triangle(glm::vec3(-0.8f, -0.8f, 0.f), 1.6f, iterations);
 
-	double step = 1.f / triangles.size(); // color increment value between each triangle 
+	double step = 1.f / (triangles.size() / 3); // color increment value for each triangle
 	double current = 0.f; // starting value
 
 	// for each triangle, add its vertices and color to cpuGeom
-	for (const triangle& triangle : triangles) {
-		cpuGeom.verts.push_back(glm::vec3(triangle.left.x, triangle.left.y, 0.f));
-		cpuGeom.verts.push_back(glm::vec3(triangle.right.x, triangle.right.y, 0.f));
-		cpuGeom.verts.push_back(glm::vec3(triangle.top.x, triangle.top.y, 0.f));
-
+	for (int i = 0; i < triangles.size(); i++) {
+		cpuGeom.verts.push_back(triangles[i]);
+		cpuGeom.verts.push_back(triangles[++i]);
+		cpuGeom.verts.push_back(triangles[++i]);
+		
 		cpuGeom.cols.push_back(glm::vec3(1.f - current, current, 0.f));
 		cpuGeom.cols.push_back(glm::vec3(1.f - current, current, 0.f));
 		cpuGeom.cols.push_back(glm::vec3(1.f - current, current, 0.f));
@@ -312,15 +234,15 @@ void render_serpinski(CPU_Geometry& cpuGeom, int iterations) {
 
 void render_levy(CPU_Geometry& cpuGeom, int iterations) {
 	// call calculate_levy to get all vertices of the levy c curve
-	std::vector<levy> levys = calculate_levy({0.f, -0.4f}, 0.8f, glm::pi<double>() / 2, iterations);
+	std::vector<glm::vec3> levys = calculate_levy({0.f, -0.4f, 0.f}, 0.8f, glm::pi<double>() / 2, iterations);
 
-	double step = 1.f / levys.size(); // color increment value for each line segment
+	double step = 1.f / (levys.size() / 2); // color increment value for each line segment
 	double current = 0.f; // starting value
 
 	// for each line segment, add its vertices and color to cpuGeom
-	for (const levy& levy : levys) {
-		cpuGeom.verts.push_back(glm::vec3(levy.start.x, levy.start.y, 0.f));
-		cpuGeom.verts.push_back(glm::vec3(levy.end.x, levy.end.y, 0.f));
+	for (int i = 0; i < levys.size(); i++) {
+		cpuGeom.verts.push_back(levys[i]);
+		cpuGeom.verts.push_back(levys[++i]);
 
 		cpuGeom.cols.push_back(glm::vec3(1.f - current, current, 0.f));
 		current += step;
@@ -330,15 +252,19 @@ void render_levy(CPU_Geometry& cpuGeom, int iterations) {
 
 void render_tree(CPU_Geometry& cpuGeom, int iterations, bonus_params bonus) {
 	// call calculate_tree to get all vertices of the tree
-	std::vector<tree> trees = calculate_tree({0.f, -0.8f}, 0.8f, glm::pi<double>() / 2, iterations, iterations, bonus);
+	std::vector<std::pair<glm::vec3, color>> trees = calculate_tree({0.f, -0.8f, 0.f}, 0.8f, glm::pi<double>() / 2, iterations, iterations, bonus);
 
-	for (const tree& branch : trees) {
-		cpuGeom.verts.push_back(glm::vec3(branch.start.x, branch.start.y, 0.f));
-		cpuGeom.verts.push_back(glm::vec3(branch.end.x, branch.end.y, 0.f));
+	// calculate the vertex number where the color changes
 
-		cpuGeom.cols.push_back(glm::vec3(branch.col.r, branch.col.g, branch.col.b));
-		cpuGeom.cols.push_back(glm::vec3(branch.col.r, branch.col.g, branch.col.b));
+	// for each branch, add its vertices and color to cpuGeom
+	for (int i = 0; i < trees.size(); i++) {
+		cpuGeom.verts.push_back(trees[i].first);
+		cpuGeom.cols.push_back(glm::vec3(trees[i].second.r, trees[i].second.g, trees[i].second.b));
+
+		cpuGeom.verts.push_back(trees[++i].first);
+		cpuGeom.cols.push_back(glm::vec3(trees[i].second.r, trees[i].second.g, trees[i].second.b));
 	}
+	
 }
 
 int main() {
@@ -397,6 +323,7 @@ int main() {
 		if (prevShape != shape) {
 			iterations = 0;
 			prevShape = shape;
+			bonus = {};
 		}
 		switch (shape) {
 			case 0:
@@ -434,8 +361,13 @@ int main() {
 		glDrawArrays(render_mode, 0, nVerts); // Render Triangle primatives, starting at index 0 (first) with a total of nVerts
 		glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui (if used)
 
-		ImGui::Begin("My name is window, ImGUI window");
-		ImGui::Text("Hello world!");
+		ImGui::Begin("Bonus Points");
+		// show fps
+		ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+		if (ImGui::Button("Reset Parameters")) {
+			iterations = 0;
+			bonus = {};
+		}
 		ImGui::SliderInt("Shape", &shape, 0, 2, shapeName.c_str());
 		ImGui::SliderInt("Iteration", &iterations, 0, max_iterations, std::to_string(iterations).c_str());
 		// enable extra tree customization values if on the tree fractal
