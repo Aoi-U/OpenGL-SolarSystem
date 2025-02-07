@@ -20,4 +20,6 @@ Navigate to the root folder then in the terminal
 ```cd build```
 ```cmake ..```
 ```cmake --build . --config Release```
-```./Release/453-skeleton.exe```
+```./Release/453-skeleton```
+Note: If running this program on the CPSC lab machines, building the program may create the 453-skeleton.exe 
+on the root build folder. In that case, type ```./453-skeleton``` instead of ```./Release/453-skeleton```
