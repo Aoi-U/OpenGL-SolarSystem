@@ -33,50 +33,55 @@ public:
     {
         if (action == GLFW_PRESS)
         {
-            mKeysPressed.push_back(key);
+            mKeys[key] = true;
         }
         else if (action == GLFW_RELEASE)
         {
-            mKeysPressed.erase(
-                std::remove(mKeysPressed.begin(), mKeysPressed.end(), key),
-                mKeysPressed.end()
-            );
+            mKeys[key] = false;
         }
     }
 
     // One way to handle input is to keep track of keys being pressed and released.
     bool IsKeyDown(int const key) const
     {
-        return std::find(mKeysPressed.begin(), mKeysPressed.end(), key) != mKeysPressed.end();
+        return mKeys.find(key) != mKeys.end() && mKeys.at(key);
+    }
+
+    void ResetKeys()
+    {
+        mKeys.clear();
     }
 
 private:
-    std::vector<int> mKeysPressed;
+    std::unordered_map<int, bool> mKeys;
 };
 
 //======================================================================================================================
 
 void Game::ResetGame()
 {
-    cannonBalls.clear();
-    pirateShips.clear();
-    // create a new player
-    player = Transformation(0.f, 0.f, 0.f, 0.116f, 0.2f);
-    pirateShips = {
-        {"1", Transformation(0.f, 0.f, 0.f, 0.116f, 0.2f)},
-        {"2", Transformation(0.f, 0.f, 0.f, 0.116f, 0.2f)},
-        {"3", Transformation(0.f, 0.f, 0.f, 0.116f, 0.2f)},
-        {"4", Transformation(0.f, 0.f, 0.f, 0.116f, 0.2f)},
-        {"5", Transformation(0.f, 0.f, 0.f, 0.116f, 0.2f)},
-        {"7", Transformation(0.f, 0.f, 0.f, 0.116f, 0.2f)},
-        {"8", Transformation(0.f, 0.f, 0.f, 0.116f, 0.2f)},
-    };
+    mInputManager->ResetKeys();
+    // deallocate mTexture
+    mTexture.reset();
     
     mScore = 0;
     mHealth = 3;
-    fireTime = 0.f;
-    shipWaveTime = 0.f;
     mGameOver = false;
+    fireTime = 0;
+    shipWaveTime = 0;
+
+    player = Transformation{};
+    pirateShips.clear();
+    cannonBalls.clear();
+
+    pirateShips.push_back({"2", Transformation{}, true});
+    pirateShips.push_back({"3", Transformation{}, true});
+    pirateShips.push_back({"4", Transformation{}, true});
+    pirateShips.push_back({"5", Transformation{}, true});
+    pirateShips.push_back({"7", Transformation{}, true});
+    pirateShips.push_back({"8", Transformation{}, true});
+    pirateShips.push_back({"1", Transformation{}, true});
+    
     SpawnPirateShips();
 }
 
@@ -94,7 +99,10 @@ void Game::SpawnPirateShips()
     std::vector<float> yValues;
     for (auto& pirateShip : pirateShips) 
     {
-        pirateShip.t = Transformation{0.f, 0.f, 0.f, 0.116f, 0.2f};
+        if (!pirateShip.active) {
+            continue;
+        }
+        pirateShip.t = Transformation{};
         // choose x value between 2 and 4
         float x = 2 + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (4 - 2)));
         x = rand() % 2 == 0 ? x : -x;
@@ -112,10 +120,8 @@ void Game::SpawnPirateShips()
         pirateShip.t.move(x, y);
         if (x < 0) {
             pirateShip.t.rotate(glm::radians(-90.f));
-            // pirateShip.second.setOrientation('L');
         } else {
             pirateShip.t.rotate(glm::radians(90.f));
-            // pirateShip.second.setOrientation('R');
         }
     }
 }
@@ -126,7 +132,7 @@ void Game::SpawnCannonBall()
     Transformation ball = player;
     ball.scale(0.04f, 0.04f);
     ball.rotate(glm::radians(90.f));
-    cannonBalls.push_back({0.f, ball});
+    cannonBalls.push_back({0.f, ball, true});
 }
 
 Game::Game()
@@ -213,17 +219,25 @@ void Game::Run()
         glClearColor(0.2f, 0.6f, 0.8f, 1.0f);
         // https://www.viewsonic.com/library/creative-work/srgb-vs-adobe-rgb-which-one-to-use/
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear render screen (all zero) and depth (all max depth)
-
+        
+        mTexture.reset();
         mTexture = std::make_unique<Texture>(mPath->Get("textures/PNG/Retina/Ships/ship (6).png"), GL_NEAREST);
         Render(player); // render player
 
         for (auto& pirateShip : pirateShips) {
-
+            if (!pirateShip.active) {
+                continue;
+            }
+            mTexture.reset();
             mTexture = std::make_unique<Texture>(mPath->Get("textures/PNG/Retina/Ships/ship (" + pirateShip.id + ").png"), GL_NEAREST);
             Render(pirateShip.t); // render pirate ship
         }
 
         for (auto& cannonBall : cannonBalls) {
+            if (!cannonBall.active) {
+                continue;
+            }
+            mTexture.reset();
             mTexture = std::make_unique<Texture>(mPath->Get("textures/PNG/Retina/Ship Parts/cannonBall.png"), GL_NEAREST);
             Render(cannonBall.t); // render cannon ball
         }
@@ -271,16 +285,27 @@ bool Game::CheckWallCollision(Transformation& t)
 void Game::MovePlayer(float const deltaTime)
 {
     float shipAngle = player.getAngle();
-    float moveX = PlayerMovementSpeed * deltaTime * glm::cos(glm::radians(90.f + shipAngle));
-    float moveY = PlayerMovementSpeed * deltaTime * glm::sin(glm::radians(90.f + shipAngle));
+    float moveX = PlayerMovementSpeed * deltaTime * glm::cos(glm::radians(shipAngle));
+    float moveY = PlayerMovementSpeed * deltaTime * glm::sin(glm::radians(shipAngle));
 
     if (mInputManager->IsKeyDown(GLFW_KEY_W))
     {
-        player.move(moveX, moveY);
-    }
-    if (mInputManager->IsKeyDown(GLFW_KEY_S))
+        if (!CheckWallCollision(player)) 
+        {
+            player.move(moveX, moveY);
+        } else 
+        {
+            player.move(-moveX, -moveY);
+        }
+    } else if (mInputManager->IsKeyDown(GLFW_KEY_S))
     {
-        player.move(-moveX, -moveY);
+        if (!CheckWallCollision(player)) 
+        {
+            player.move(-moveX, -moveY);
+        } else 
+        {
+            player.move(moveX, moveY);
+        }
     }
     if (mInputManager->IsKeyDown(GLFW_KEY_A))
     {
@@ -303,25 +328,24 @@ void Game::MovePirateShips(float const deltaTime)
 {
     for (auto& pirateShip : pirateShips) 
     {
+        if (!pirateShip.active) {
+            continue;
+        }
         // check if the pirate ship hits a player
         if (CheckCollision(pirateShip.t, player)) {
             // decrease the player's health
             mHealth -= 1;
-            // remove the pirate ship
-            for (int i = 0; i < pirateShips.size(); i++) {
-                if (pirateShips[i].id == pirateShip.id) {
-                    pirateShips.erase(pirateShips.begin() + i);
-                    break;
-                }
-            }
+            // deactivate the pirate ship
+            pirateShip.active = false;            
             continue;
         }
         
         // move the pirate ship across the screen
         float shipAngle = pirateShip.t.getAngle();
-        float moveX = PirateShipMovementSpeed * deltaTime * glm::cos(glm::radians(90.f + shipAngle));
-        float moveY = PirateShipMovementSpeed * deltaTime * glm::sin(glm::radians(90.f + shipAngle));
+        float moveX = PirateShipMovementSpeed * deltaTime * glm::cos(glm::radians(shipAngle));
+        float moveY = PirateShipMovementSpeed * deltaTime * glm::sin(glm::radians(shipAngle));
         pirateShip.t.move(moveX, moveY);
+
     }
 }
 
@@ -329,12 +353,13 @@ void Game::MoveCannonBalls(float const deltaTime)
 {
     for (auto& cannonBall : cannonBalls) 
     { 
+        if (!cannonBall.active) {
+            continue;
+        }
         cannonBall.lifeTime += deltaTime;
         // if the cannon ball has been alive for too long, remove it
         if (cannonBall.lifeTime >= CannonBallLifeTime) {
-            // note: it suffices to remove the first cannon ball in the vector because 
-            // oldest cannon balls are at the beginning of the vector
-            cannonBalls.erase(cannonBalls.begin());
+            cannonBall.active = false;
             continue;
         }
 
@@ -344,45 +369,27 @@ void Game::MoveCannonBalls(float const deltaTime)
             if (CheckCollision(cannonBall.t, player)) {
                 // decrease the player's health
                 mHealth -= 1;
-                // remove the cannon ball
-                for (int i = 0; i < cannonBalls.size(); i++) {
-                    if (cannonBalls[i].lifeTime == cannonBall.lifeTime) {
-                        cannonBalls.erase(cannonBalls.begin() + i);
-                        break;
-                    }
-                }
+                // deactivate the cannon ball
+                cannonBall.active = false;                
                 continue;
             }
         }
 
         // check if the cannon ball hits a pirate ship
-        bool hitPirateShip = false;
         for (auto& pirateShip : pirateShips) 
         {
+            if (!pirateShip.active) {
+                continue;
+            }
             if (CheckCollision(cannonBall.t, pirateShip.t)) {
                 // if the cannon ball hits a pirate ship, increase the player's score
                 mScore += 1;
-                // remove the cannon ball
-                for (int i = 0; i < cannonBalls.size(); i++) {
-                    if (cannonBalls[i].lifeTime == cannonBall.lifeTime) {
-                        cannonBalls.erase(cannonBalls.begin() + i);
-                        break;
-                    }
-                }
-                // remove the pirate ship
-                for (int i = 0; i < pirateShips.size(); i++) {
-                    if (pirateShips[i].id == pirateShip.id) {
-                        pirateShips.erase(pirateShips.begin() + i);
-                        break;
-                    }
-                }
-                hitPirateShip = true;
+                // deactivate the cannon ball
+                cannonBall.active = false;
+                // deactivate the pirate ship
+                pirateShip.active = false;
                 break;
             }
-        }
-
-        if (hitPirateShip) {
-            continue;
         }
 
         // check if the cannon ball hits a wall, bounce it off 
@@ -408,8 +415,8 @@ void Game::MoveCannonBalls(float const deltaTime)
 
         // move the cannon ball across the screen
         ballAngle = cannonBall.t.getAngle();
-        float moveX = CannonBallSpeed * deltaTime * glm::cos(glm::radians(90.f + ballAngle));
-        float moveY = CannonBallSpeed * deltaTime * glm::sin(glm::radians(90.f + ballAngle));
+        float moveX = CannonBallSpeed * deltaTime * glm::cos(glm::radians(ballAngle));
+        float moveY = CannonBallSpeed * deltaTime * glm::sin(glm::radians(ballAngle));
         cannonBall.t.move(moveX, moveY);
     }
 }
@@ -439,6 +446,16 @@ void Game::Update(float const deltaTime)
             mGameOver = true;
         }
     }
+
+    // remove inactive cannon balls
+    cannonBalls.erase(std::remove_if(cannonBalls.begin(), cannonBalls.end(), [](CannonBall& cannonBall) {
+        return !cannonBall.active;
+    }), cannonBalls.end());
+    
+    // remove inactive pirate ships
+    pirateShips.erase(std::remove_if(pirateShips.begin(), pirateShips.end(), [](Ship& pirateShip) {
+        return !pirateShip.active;
+    }), pirateShips.end());
 }
 
 //======================================================================================================================

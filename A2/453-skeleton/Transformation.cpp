@@ -3,14 +3,6 @@
 
 #include <iostream>
 
-Transformation::Transformation(float x, float y, float rotation, float scaleX, float scaleY) 
-{
-    transformationMatrix = glm::mat4(1.0f);
-    move(x, y);
-    rotate(rotation);
-    scale(scaleX, scaleY);
-}
-
 void Transformation::move(float x, float y) 
 {
     transformationMatrix = glm::translate(transformationMatrix, glm::vec3(x, y, 0.0f));

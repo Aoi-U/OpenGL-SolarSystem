@@ -21,11 +21,13 @@ private:
     struct Ship {
         std::string id;
         Transformation t;
+        bool active;
     };
     struct CannonBall 
     {
         float lifeTime;
         Transformation t;
+        bool active;
     };
     struct Explosion;
     struct CrocodileCircle;
@@ -89,6 +91,7 @@ private:
 
     int mScore = 0;
     int mHealth = 3;
+    int activeShips = 7;
     bool mGameOver;
     float fireTime;
     float shipWaveTime;

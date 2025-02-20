@@ -2,9 +2,7 @@
 
 class Transformation {
 public:
-    Transformation() : transformationMatrix(glm::mat4(1.0f)) {};
-    // constructor to initialize all values
-    Transformation(float x, float y, float rotation, float scaleX, float scaleY);
+    Transformation() {};
 
     // set the x and y values
     void move(float x, float y);
@@ -26,13 +24,10 @@ public:
 
     // get the position
     glm::vec2 getPosition();
-
-    void moveX(float x);
-    void moveY(float y);
     
     private:
     glm::mat4 transformationMatrix = glm::mat4(1.0f);
-    float scaleX = 1.f;
-    float scaleY = 1.f;
-    float angle = 0;
+    float scaleX = 0.087f;
+    float scaleY = 0.15f;
+    float angle = 90;
 };
