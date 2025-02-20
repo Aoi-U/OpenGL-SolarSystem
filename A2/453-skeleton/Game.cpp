@@ -182,6 +182,7 @@ Game::Game()
     }
 
     // mTexture = std::make_unique<Texture>(mPath->Get("textures/PNG/Retina/Ships/ship (6).png"), GL_NEAREST);
+    srand((unsigned int)time(NULL));
     ResetGame();
 }
 
