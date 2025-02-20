@@ -25,8 +25,9 @@ private:
     };
     struct CannonBall 
     {
-        float lifeTime;
+        std::string id;
         Transformation t;
+        float lifeTime;
         bool active;
     };
     struct Explosion;
@@ -50,11 +51,10 @@ private:
 
     void ResetGame();
 
-    bool CheckCollision(Transformation& t1, Transformation& t2);
-    bool CheckWallCollision(Transformation& t);
+    bool CheckCollision(Transformation t1, Transformation t2);
+    bool CheckWallCollision(Transformation t);
 
     void SpawnPirateShips();
-    void SpawnCannonBall();
     void MovePlayer(float const deltaTime);
     void MovePirateShips(float const deltaTime);
     void MoveCannonBalls(float const deltaTime);
@@ -93,10 +93,10 @@ private:
     int mHealth = 3;
     int activeShips = 7;
     bool mGameOver;
-    float fireTime;
+    float cannonCooldown;
     float shipWaveTime;
     
-    Transformation player;
+    Ship player;
     std::vector<CannonBall> cannonBalls;
     std::vector<Ship> pirateShips;
 };
