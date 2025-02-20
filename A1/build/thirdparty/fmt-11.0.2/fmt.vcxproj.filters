@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\aoi20\Desktop\University\Year 3 winter\CPSC453\A1\thirdparty\fmt-11.0.2\src\format.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\aoi20\Desktop\University\Year 3 winter\CPSC453\A1\thirdparty\fmt-11.0.2\src\os.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C:\Users\aoi20\Desktop\University\Year 3 winter\CPSC453\A1\thirdparty\fmt-11.0.2\include\fmt\args.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\aoi20\Desktop\University\Year 3 winter\CPSC453\A1\thirdparty\fmt-11.0.2\include\fmt\base.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\aoi20\Desktop\University\Year 3 winter\CPSC453\A1\thirdparty\fmt-11.0.2\include\fmt\chrono.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\aoi20\Desktop\University\Year 3 winter\CPSC453\A1\thirdparty\fmt-11.0.2\include\fmt\color.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\aoi20\Desktop\University\Year 3 winter\CPSC453\A1\thirdparty\fmt-11.0.2\include\fmt\compile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\aoi20\Desktop\University\Year 3 winter\CPSC453\A1\thirdparty\fmt-11.0.2\include\fmt\core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\aoi20\Desktop\University\Year 3 winter\CPSC453\A1\thirdparty\fmt-11.0.2\include\fmt\format.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\aoi20\Desktop\University\Year 3 winter\CPSC453\A1\thirdparty\fmt-11.0.2\include\fmt\format-inl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\aoi20\Desktop\University\Year 3 winter\CPSC453\A1\thirdparty\fmt-11.0.2\include\fmt\os.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\aoi20\Desktop\University\Year 3 winter\CPSC453\A1\thirdparty\fmt-11.0.2\include\fmt\ostream.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\aoi20\Desktop\University\Year 3 winter\CPSC453\A1\thirdparty\fmt-11.0.2\include\fmt\printf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\aoi20\Desktop\University\Year 3 winter\CPSC453\A1\thirdparty\fmt-11.0.2\include\fmt\ranges.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\aoi20\Desktop\University\Year 3 winter\CPSC453\A1\thirdparty\fmt-11.0.2\include\fmt\std.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\aoi20\Desktop\University\Year 3 winter\CPSC453\A1\thirdparty\fmt-11.0.2\include\fmt\xchar.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\aoi20\Desktop\University\Year 3 winter\CPSC453\A1\thirdparty\fmt-11.0.2\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C:\Users\aoi20\Desktop\University\Year 3 winter\CPSC453\A1\thirdparty\fmt-11.0.2\README.md" />
+    <None Include="C:\Users\aoi20\Desktop\University\Year 3 winter\CPSC453\A1\thirdparty\fmt-11.0.2\ChangeLog.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{8CB83D79-9569-3748-A40D-D0B662D09C77}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{6BCDFA70-5E3D-35CA-8FE8-141ADE32AD4E}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

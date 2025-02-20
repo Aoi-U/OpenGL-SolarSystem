@@ -1,0 +1,10 @@
+^C:\USERS\AOI20\DESKTOP\UNIVERSITY\YEAR 3 WINTER\CPSC453\A1\THIRDPARTY\GLFW-3.4\SRC\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" "-SC:/Users/aoi20/Desktop/University/Year 3 winter/CPSC453/A1" "-BC:/Users/aoi20/Desktop/University/Year 3 winter/CPSC453/A1/build" --check-stamp-file "C:/Users/aoi20/Desktop/University/Year 3 winter/CPSC453/A1/build/thirdparty/glfw-3.4/src/CMakeFiles/generate.stamp"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

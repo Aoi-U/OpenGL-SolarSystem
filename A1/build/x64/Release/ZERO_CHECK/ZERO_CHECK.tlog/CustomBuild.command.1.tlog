@@ -1,0 +1,10 @@
+^C:\USERS\AOI20\DESKTOP\UNIVERSITY\YEAR 3 WINTER\CPSC453\A1\BUILD\CMAKEFILES\3E955C38EAD8A59D4FA1381F9DE049F9\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" "-SC:/Users/aoi20/Desktop/University/Year 3 winter/CPSC453/A1" "-BC:/Users/aoi20/Desktop/University/Year 3 winter/CPSC453/A1/build" --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file "C:/Users/aoi20/Desktop/University/Year 3 winter/CPSC453/A1/build/453-skeleton.sln"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
