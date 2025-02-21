@@ -268,7 +268,8 @@ bool Game::CheckCollision(Transformation t1, Transformation t2)
 bool Game::CheckWallCollision(Transformation t)
 {
     glm::vec2 position = t.getPosition();
-    if (position.x < -1 || position.x > 1 || position.y < -1 || position.y > 1) {
+    glm::vec2 scale = t.getScale();
+    if (position.x - scale.x / 2 <= -1 || position.x + scale.x / 2 >= 1 || position.y - scale.y / 2 <= -1 || position.y + scale.y / 2 >= 1) {
         return true;
     }
     return false;
@@ -282,18 +283,14 @@ void Game::MovePlayer(float const deltaTime)
 
     if (mInputManager->IsKeyDown(GLFW_KEY_W)) // move forward
     {
-        if (!CheckWallCollision(player.t)) 
-        {
-            player.t.move(moveX, moveY);
-        } else {
+        player.t.move(moveX, moveY);
+        if (CheckWallCollision(player.t)) {
             player.t.move(-moveX, -moveY);
         }
     } else if (mInputManager->IsKeyDown(GLFW_KEY_S)) // move backward
     {
-        if (!CheckWallCollision(player.t)) 
-        {
-            player.t.move(-moveX, -moveY);
-        } else {
+        player.t.move(-moveX, -moveY);
+        if (CheckWallCollision(player.t)) {
             player.t.move(moveX, moveY);
         }
     } 
@@ -396,23 +393,32 @@ void Game::MoveCannonBalls(float const deltaTime)
             }
         }
 
-        // if the ball hits a wall, bounce it off
-        glm::vec2 position = cannonBall.t.getPosition();
+        // move the cannon ball 
         float ballAngle = cannonBall.t.getAngle();
-        if (position.x <= -1) 
-            cannonBall.t.rotate(glm::radians(-45.f));
-        else if (position.x >= 1) 
-            cannonBall.t.rotate(glm::radians(45.f));
-        else if (position.y <= -1) 
-            cannonBall.t.rotate(glm::radians(-45.f));
-        else if (position.y >= 1) 
-            cannonBall.t.rotate(glm::radians(-45.f));
-
-        // move the cannon ball across the screen
-        ballAngle = cannonBall.t.getAngle();
         float moveX = CannonBallSpeed * deltaTime * glm::cos(glm::radians(ballAngle));
         float moveY = CannonBallSpeed * deltaTime * glm::sin(glm::radians(ballAngle));
         cannonBall.t.move(moveX, moveY);
+
+        // if the ball hits a wall, reflect it
+        if (CheckWallCollision(cannonBall.t)) {
+             // if the ball hits a wall, bounce it off
+            glm::vec2 position = cannonBall.t.getPosition();
+            glm::vec2 scale = cannonBall.t.getScale();
+            if (position.x - scale.x / 2 <= -1) 
+                cannonBall.t.rotate(glm::radians(-45.f));
+            else if (position.x + scale.x / 2 >= 1) 
+                cannonBall.t.rotate(glm::radians(45.f));
+            else if (position.y - scale.y / 2<= -1) 
+                cannonBall.t.rotate(glm::radians(-45.f));
+            else if (position.y - scale.y / 2 >= 1) 
+                cannonBall.t.rotate(glm::radians(-45.f));
+
+            // move the cannon ball across the screen
+            ballAngle = cannonBall.t.getAngle();
+            moveX = CannonBallSpeed * deltaTime * glm::cos(glm::radians(ballAngle));
+            moveY = CannonBallSpeed * deltaTime * glm::sin(glm::radians(ballAngle));
+            cannonBall.t.move(moveX, moveY);
+        }
     }
 }
 

@@ -15,15 +15,15 @@ public:
 
     // get the transformation matrix
     glm::mat4 getTransformationMatrix();
-
-    // get the angle
-    float getAngle();
     
     // get the scale
     glm::vec2 getScale();
-
+    
     // get the position
     glm::vec2 getPosition();
+    
+    // get the angle
+    float getAngle();
     
     private:
     glm::mat4 transformationMatrix = glm::mat4(1.0f);

@@ -25,11 +25,6 @@ glm::mat4 Transformation::getTransformationMatrix()
     return this->transformationMatrix;
 }
 
-float Transformation::getAngle() 
-{
-    return this->angle;
-}
-
 glm::vec2 Transformation::getScale() 
 {
     return glm::vec2(scaleX, scaleY);
@@ -38,4 +33,9 @@ glm::vec2 Transformation::getScale()
 glm::vec2 Transformation::getPosition() 
 {
     return glm::vec2(transformationMatrix[3][0], transformationMatrix[3][1]);
+}
+
+float Transformation::getAngle() 
+{
+    return this->angle;
 }
