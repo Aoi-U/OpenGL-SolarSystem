@@ -26,8 +26,9 @@ public:
     float getAngle();
     
     private:
-    glm::mat4 transformationMatrix = glm::mat4(1.0f);
     float scaleX = 0.087f;
     float scaleY = 0.15f;
+    float posX = 0.0f;
+    float posY = 0.0f;
     float angle = 90;
 };

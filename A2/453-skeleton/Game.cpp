@@ -119,9 +119,9 @@ void Game::SpawnPirateShips()
 
         pirateShip.t.move(x, y);
         if (x < 0) {
-            pirateShip.t.rotate(glm::radians(-90.f));
+            pirateShip.t.rotate(-90.f);
         } else {
-            pirateShip.t.rotate(glm::radians(90.f));
+            pirateShip.t.rotate(90.f);
         }
     }
 }
@@ -277,7 +277,7 @@ bool Game::CheckWallCollision(Transformation t)
 
 void Game::MovePlayer(float const deltaTime)
 {
-    float shipAngle = player.t.getAngle();
+    float shipAngle = player.t.getAngle(); // returns angle of ship in degrees
     float moveX = PlayerMovementSpeed * deltaTime * glm::cos(glm::radians(shipAngle));
     float moveY = PlayerMovementSpeed * deltaTime * glm::sin(glm::radians(shipAngle));
 
@@ -296,10 +296,10 @@ void Game::MovePlayer(float const deltaTime)
     } 
     if (mInputManager->IsKeyDown(GLFW_KEY_A)) // rotate left
     {
-        player.t.rotate(PlayerRotationSpeed * deltaTime);
+        player.t.rotate(glm::degrees(PlayerRotationSpeed * deltaTime));
     } else if (mInputManager->IsKeyDown(GLFW_KEY_D)) // rotate right
     {
-        player.t.rotate(-PlayerRotationSpeed * deltaTime);
+        player.t.rotate(-glm::degrees(PlayerRotationSpeed * deltaTime));
     }
 }
 
@@ -341,10 +341,10 @@ void Game::MoveCannonBalls(float const deltaTime)
             cannonCooldown = 0.f; // reset the fire time
 
             // add a cannon ball to fire
-            CannonBall ball = {"textures/PNG/Retina/Ship Parts/cannonBall.png", player.t, 0.f, true};
-            ball.t.scale(0.02f, 0.02f);
-            ball.t.rotate(glm::radians(90.f));
-            cannonBalls.push_back(ball);
+            CannonBall cannonBall = {"textures/PNG/Retina/Ship Parts/cannonBall.png", player.t, 0.f, true};
+            cannonBall.t.scale(0.02f, 0.02f);
+            cannonBall.t.rotate(90.f);
+            cannonBalls.push_back(cannonBall);
         }
     }
 
@@ -401,23 +401,18 @@ void Game::MoveCannonBalls(float const deltaTime)
 
         // if the ball hits a wall, reflect it
         if (CheckWallCollision(cannonBall.t)) {
-             // if the ball hits a wall, bounce it off
-            glm::vec2 position = cannonBall.t.getPosition();
+            glm::vec2 pos = cannonBall.t.getPosition();
             glm::vec2 scale = cannonBall.t.getScale();
-            if (position.x - scale.x / 2 <= -1) 
-                cannonBall.t.rotate(glm::radians(-45.f));
-            else if (position.x + scale.x / 2 >= 1) 
-                cannonBall.t.rotate(glm::radians(45.f));
-            else if (position.y - scale.y / 2<= -1) 
-                cannonBall.t.rotate(glm::radians(-45.f));
-            else if (position.y - scale.y / 2 >= 1) 
-                cannonBall.t.rotate(glm::radians(-45.f));
-
-            // move the cannon ball across the screen
-            ballAngle = cannonBall.t.getAngle();
-            moveX = CannonBallSpeed * deltaTime * glm::cos(glm::radians(ballAngle));
-            moveY = CannonBallSpeed * deltaTime * glm::sin(glm::radians(ballAngle));
-            cannonBall.t.move(moveX, moveY);
+            // if the ball hits a wall, bounce it off
+            if (pos.x + scale.x / 2 >= 1) {
+                cannonBall.t.rotate(-2 * (cannonBall.t.getAngle() - 90));
+            } else if (pos.x - scale.x / 2 <= -1) {
+                cannonBall.t.rotate(-2 * (cannonBall.t.getAngle() + 90));
+            } else if (pos.y + scale.y / 2 >= 1) {
+                cannonBall.t.rotate(-2 * (cannonBall.t.getAngle() - 180));
+            } else if (pos.y - scale.y / 2 <= -1) {
+                cannonBall.t.rotate(-2 * cannonBall.t.getAngle());
+            } 
         }
     }
 }
@@ -469,9 +464,9 @@ void Game::Render(Transformation t)
     mQuadGeometry->bind();
     mTexture->bind();
 
-    GLint scale_loc = glGetUniformLocation(*mBasicShader, "scale");
-    glm::vec3 scale = glm::vec3(t.getScale(), 1.0);
-    glUniform3fv(scale_loc, 1, glm::value_ptr(scale));
+    // GLint scale_loc = glGetUniformLocation(*mBasicShader, "scale");
+    // glm::vec3 scale = glm::vec3(t.getScale(), 1.0);
+    // glUniform3fv(scale_loc, 1, glm::value_ptr(scale));
 
     GLint transformation_loc = glGetUniformLocation(*mBasicShader, "transformation");
     glUniformMatrix4fv(transformation_loc, 1, GL_FALSE, glm::value_ptr(t.getTransformationMatrix()));

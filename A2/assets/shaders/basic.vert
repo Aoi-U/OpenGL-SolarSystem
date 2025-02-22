@@ -9,5 +9,5 @@ out vec2 uvOut;
 
 void main() {
 	uvOut = uvIn;
-	gl_Position = transformation * vec4(positionIn * scale, 1.0);
+	gl_Position = transformation * vec4(positionIn, 1.0);
 }
