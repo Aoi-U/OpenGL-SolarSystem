@@ -404,15 +404,11 @@ void Game::MoveCannonBalls(float const deltaTime)
             glm::vec2 pos = cannonBall.t.getPosition();
             glm::vec2 scale = cannonBall.t.getScale();
             // if the ball hits a wall, bounce it off
-            if (pos.x + scale.x / 2 >= 1) {
-                cannonBall.t.rotate(-2 * (cannonBall.t.getAngle() - 90));
-            } else if (pos.x - scale.x / 2 <= -1) {
-                cannonBall.t.rotate(-2 * (cannonBall.t.getAngle() + 90));
-            } else if (pos.y + scale.y / 2 >= 1) {
-                cannonBall.t.rotate(-2 * (cannonBall.t.getAngle() - 180));
-            } else if (pos.y - scale.y / 2 <= -1) {
-                cannonBall.t.rotate(-2 * cannonBall.t.getAngle());
-            } 
+            if (pos.x - scale.x / 2 <= -1 || pos.x + scale.x / 2 >= 1) {
+                cannonBall.t.rotate(-2 * (ballAngle - 90));
+            } else if (pos.y - scale.y / 2 <= -1 || pos.y + scale.y / 2 >= 1) {
+                cannonBall.t.rotate(-2 * (ballAngle));
+            }
         }
     }
 }
@@ -440,14 +436,22 @@ void Game::Update(float const deltaTime)
         shipWaveTime += deltaTime; // increase the ship wave time
         
         // remove inactive cannon balls
-        cannonBalls.erase(std::remove_if(cannonBalls.begin(), cannonBalls.end(), [](CannonBall& cannonBall) {
-            return !cannonBall.active;
-        }), cannonBalls.end());
+        std::vector<CannonBall> newCannonBalls;
+        for (auto& cannonBall : cannonBalls) {
+            if (cannonBall.active) {
+                newCannonBalls.push_back(cannonBall);
+            }
+        }
+        cannonBalls = newCannonBalls;
         
         // remove inactive pirate ships
-        pirateShips.erase(std::remove_if(pirateShips.begin(), pirateShips.end(), [](Ship& pirateShip) {
-            return !pirateShip.active;
-        }), pirateShips.end());
+        std::vector<Ship> newPirateShips;
+        for (auto& pirateShip : pirateShips) {
+            if (pirateShip.active) {
+                newPirateShips.push_back(pirateShip);
+            }
+        }
+        pirateShips = newPirateShips;
 
         // check if the game is over
         if (mHealth <= 0 || mScore >= PirateShipCount) {

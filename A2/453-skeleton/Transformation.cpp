@@ -5,26 +5,25 @@
 
 void Transformation::move(float x, float y) 
 {
-    this->posX += x;
-    this->posY += y;
+    posX += x;
+    posY += y;
 }
 
 void Transformation::rotate(float rotation) 
 {
-    this->angle += rotation;
+    angle += rotation;
     // normalize the angle to be between -180 and 180
-    while (this->angle > 180) {
-        this->angle -= 360;
-    }
-    while (this->angle < -180) {
-        this->angle += 360;
+    if (angle > 180) {
+        angle -= 360;
+    } else if (angle < -180) {
+        angle += 360;
     }
 }
 
-void Transformation::scale(float scaleX, float scaleY) 
+void Transformation::scale(float x, float y) 
 {
-    this->scaleX = scaleX;
-    this->scaleY = scaleY;
+    scaleX = x;
+    scaleY = y;
 }
 
 glm::mat4 Transformation::getTransformationMatrix() 
