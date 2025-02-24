@@ -26,7 +26,7 @@ public:
     float getAngle();
     
     private:
-    float scaleX = 0.087f;
+    float scaleX = 0.088f;
     float scaleY = 0.15f;
     float posX = 0.0f;
     float posY = 0.0f;

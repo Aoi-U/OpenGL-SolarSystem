@@ -18,17 +18,19 @@ class Game
 {
 private:
 
+    // Structs for the game objects
     struct Ship {
-        std::string id;
-        Transformation t;
-        bool active;
+        std::string idActive; // file location
+        std::string idDestroyed; // file location
+        Transformation t; // transformation of the object
+        bool active; // if the object is still active
+        float animationTime;
     };
     struct CannonBall 
     {
-        std::string id;
-        Transformation t;
-        float lifeTime;
-        bool active;
+        Transformation t; // transformation of the object
+        float lifeTime; // how long the object has been alive
+        bool active; // if the object is still active
     };
     struct Explosion;
     struct CrocodileCircle;
@@ -51,13 +53,14 @@ private:
 
     void ResetGame();
 
-    bool CheckCollision(Transformation t1, Transformation t2);
-    bool CheckWallCollision(Transformation t);
+    bool CheckCollision(Transformation t1, Transformation t2); // checks if two objects are colliding
+    bool CheckWallCollision(Transformation t); // checks if an object is colliding with the wall
 
-    void SpawnPirateShips();
-    void MovePlayer(float const deltaTime);
-    void MovePirateShips(float const deltaTime);
-    void MoveCannonBalls(float const deltaTime);
+    void AnimateExplosion(Ship ship); // animates the explosion of a ship
+    void SpawnPirateShips(); // spawns the pirate ships
+    void MovePlayer(float const deltaTime); // controls player movement
+    void MovePirateShips(float const deltaTime); // moves the pirate ship across the screen
+    void MoveCannonBalls(float const deltaTime); // moves the cannon balls in the shot direction
 
     // TODO Important, Make sure to use these values for your assignment
     static constexpr float PlayerMovementSpeed = 1.0f;

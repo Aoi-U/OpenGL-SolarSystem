@@ -13,9 +13,12 @@ void Transformation::rotate(float rotation)
 {
     angle += rotation;
     // normalize the angle to be between -180 and 180
-    if (angle > 180) {
+    if (angle > 180) 
+    {
         angle -= 360;
-    } else if (angle < -180) {
+    }
+    if (angle < -180) 
+    {
         angle += 360;
     }
 }
