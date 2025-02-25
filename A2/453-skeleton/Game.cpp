@@ -536,10 +536,6 @@ void Game::Render(Transformation t)
     mQuadGeometry->bind();
     mTexture->bind();
 
-    // GLint scale_loc = glGetUniformLocation(*mBasicShader, "scale");
-    // glm::vec3 scale = glm::vec3(t.getScale(), 1.0);
-    // glUniform3fv(scale_loc, 1, glm::value_ptr(scale));
-
     GLint t_loc = glGetUniformLocation(*mBasicShader, "transformation");
     glUniformMatrix4fv(t_loc, 1, GL_FALSE, glm::value_ptr(t.getTransformationMatrix()));
 
