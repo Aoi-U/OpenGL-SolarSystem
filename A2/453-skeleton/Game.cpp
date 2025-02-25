@@ -297,8 +297,6 @@ void Game::Run()
     }
 }
 
-//======================================================================================================================
-
 // checks if two objects are colliding
 bool Game::CheckCollision(Transformation t1, Transformation t2)
 {
@@ -364,6 +362,7 @@ void Game::MovePlayer(float const deltaTime)
     }
 }
 
+// moves the pirate ship across the screen
 void Game::MovePirateShips(float const deltaTime)
 {
     for (Ship& pirateShip : pirateShips) 
@@ -392,6 +391,7 @@ void Game::MovePirateShips(float const deltaTime)
     }
 }
 
+// moves the cannon balls in the shot direction
 void Game::MoveCannonBalls(float const deltaTime) 
 {
     // if the player presses space, load a cannon ball
@@ -475,35 +475,37 @@ void Game::MoveCannonBalls(float const deltaTime)
     }
 }
 
+//======================================================================================================================
+
 void Game::Update(float const deltaTime)
 {
-    // Reset the game if the player presses R
+    // reset the game if the player presses R
     if (mInputManager->IsKeyDown(GLFW_KEY_R))
         ResetGame();
 
+    // update the animation time for inactive pirate ships and player if dead
     for (Ship& pirateShip : pirateShips) {
-        if (!pirateShip.active) {
+        if (!pirateShip.active) 
             pirateShip.animationTime += deltaTime;
-        }
     }
-    if (!player.active) {
+    if (!player.active) 
         player.animationTime += deltaTime;
-    }
-    // Update the game
+    
+    // update the game
     if (!mGameOver) {
         MovePlayer(deltaTime); // move the player
         MovePirateShips(deltaTime); // move the pirate ships
         MoveCannonBalls(deltaTime); // move the cannon balls
+
+        cannonCooldown += deltaTime; // increase reload time
+        shipWaveTime += deltaTime; // increase ship wave time
         
         // check if a new wave should be spawned
         if (shipWaveTime >= PirateShipWaveCooldown) {
-            shipWaveTime = 0.f;
-            // spawn the remaining pirate ships
+            shipWaveTime = 0.f; // reset the wave timer
+            // respawn the remaining active pirate ships
             SpawnPirateShips();
         }
-        
-        cannonCooldown += deltaTime; // increase reload time
-        shipWaveTime += deltaTime; // increase the ship wave time
         
         // remove inactive cannon balls
         std::vector<CannonBall> newCannonBalls;
@@ -514,12 +516,12 @@ void Game::Update(float const deltaTime)
         }
         cannonBalls = newCannonBalls;
 
-        // check if the game is over
+        // check if the game is over by player health
         if (mHealth <= 0) 
         {
             mGameOver = true;
-            player.active = false;
-        } else if (mScore >= PirateShipCount) 
+            player.active = false; // deactivate the player to play the animation
+        } else if (mScore >= PirateShipCount)  // check if the game is over by player score
         {
             mGameOver = true;
         }
