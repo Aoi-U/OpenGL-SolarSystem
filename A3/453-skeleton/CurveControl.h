@@ -30,6 +30,7 @@ private:
   ShaderProgram mShader;
   Panel mPanel;
   std::shared_ptr<CurveEditorPanelRenderer> mPanelRenderer;
+  Window &window;
   int pointIndex = -1;
   bool mouseOnPoint = false;
 
@@ -41,5 +42,10 @@ private:
   // Private functions
   CPU_Geometry GenerateInitialGeometry();
 
-  bool IsDragging();
+  void DragPoint();
+  void CreatePoint();
+  void DeletePoint();
+  void ResetPanel();
+  void UpdateEditorMode(); // allow the user to edit/modify the curves 
+  void UpdateViewMode(); // allow the user to view the curves from different angles
 };
