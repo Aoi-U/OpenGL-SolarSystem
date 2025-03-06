@@ -20,7 +20,7 @@ int main() {
   while (!window.shouldClose()) {
     glfwPollEvents();
 
-	curveControl.Update();
+	  curveControl.Update();
     curveControl.DrawGeometry();
 
     window.swapBuffers();

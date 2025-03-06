@@ -16,6 +16,18 @@ public:
 
 	virtual void keyCallback(int key, int scancode, int action, int mods) override {
 		Log::info("KeyCallback: key={}, action={}", key, action);
+
+		if (key == GLFW_KEY_R && action == GLFW_PRESS) {
+			reset = true;
+		} else if (key == GLFW_KEY_R && action == GLFW_RELEASE) {
+			reset = false;
+		}
+		
+		if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
+			deleteMode = true;
+		} else if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE) {
+			deleteMode = false;
+		}
 	}
 
 	virtual void mouseButtonCallback(int button, int action, int mods) override {
@@ -23,7 +35,8 @@ public:
 
 		if (button == GLFW_MOUSE_BUTTON_1 && action == GLFW_PRESS) {
 			wasClicked = true;
-
+		} else if (button == GLFW_MOUSE_BUTTON_1 && action == GLFW_RELEASE) {
+			wasClicked = false;
 		}
 	}
 
@@ -45,7 +58,11 @@ public:
 	}
 
 	bool wasClicked = false;
+	bool deleteMode = false;
+	bool reset = false;
 	int xpos = 0, ypos = 0;
+	int xstart = 0, ystart = 0;
+	int samples = 10;
 private:
 };
 
@@ -209,23 +226,107 @@ void CurveControl::DrawGeometry() {
 	mPanel.render();
 }
 
+bool CurveControl::IsDragging() {
+	// if (mCurveControls->isDragging) {
+	// 	return true;
+	// }
+
+	return false;
+}
+
+static const float two_pi = glm::pi<float>() * 2.f;
+glm::vec3 c(float t) {
+	return 0.5f * glm::vec3(glm::cos(two_pi * t), glm::sin(two_pi * t), 0.f);
+}
+
 void CurveControl::Update() {
 	// Use this function to process logic and update things based on user inputs
 	//Example: generate a new control point
+	
+	if (mCurveControls->reset) {
+		mCurveGeometry.verts.clear();
+		mCurveGeometry.cols.clear();
+		mouseOnPoint = false;
+		pointIndex = -1;
+		return;
+	} else if (mCurveControls->deleteMode) {	// check if deleteMode is enabled by the user
+		if (mCurveControls->wasClicked) {
+			// x and y position of where the mouse was clicked
+			double xClick = (mCurveControls->xpos - 400.0) / 400.0;
+			double yClick = (400.0 - mCurveControls->ypos) / 400.0;
+			
+			// size of points
+			double pointSize = mPanelRenderer->getPointSize() / 1000.0;
 
-	if (mCurveControls->wasClicked) {
-		Log::debug("Insert or select a control point based on the position clicked");
-		mCurveControls->wasClicked = false;
-		double xPoint = (mCurveControls->xpos - 400.0) / 400.0;
-		double yPoint = (400.0 - mCurveControls->ypos) / 400.0;
-		mCurveGeometry.verts.push_back({ xPoint, yPoint, 0.f });
-		mCurveGeometry.cols.push_back({ 0.f, 1.f, 0.f });
-		mGPUGeometry.setVerts(mCurveGeometry.verts);
-		mGPUGeometry.setCols(mCurveGeometry.cols);
-		mPointGPUGeometry.setVerts(mCurveGeometry.verts);
-		mPointGPUGeometry.setCols(
-			std::vector<glm::vec3>(mCurveGeometry.verts.size(), { 1.f, 0.f, 0.f }));
+			// check if the clicked position overlaps with any of the control points
+			for (size_t i = 0; i < mCurveGeometry.verts.size(); i++) {
+				// calculate the distance between the clicked point and this point
+				double distance = glm::distance(mCurveGeometry.verts[i], glm::vec3(xClick, yClick, 0.f));
+				// if the distance is less than the point size, point was clicked
+				if (distance < pointSize) {
+					// remove this control point
+					mCurveGeometry.verts.erase(mCurveGeometry.verts.begin() + i);
+					mCurveGeometry.cols.erase(mCurveGeometry.cols.begin() + i);
+					break;
+				}
+			}
+		}
+	} else if (mCurveControls->wasClicked) { 
+		// x and y positions of where the mouse was clicked
+		double xClick = (mCurveControls->xpos - 400.0) / 400.0;
+		double yClick = (400.0 - mCurveControls->ypos) / 400.0;
+		
+		// size of points
+		double pointSize = mPanelRenderer->getPointSize() / 1000.0; 
+
+		if (!mouseOnPoint) {
+			// check if the clicked position overlaps with any of the control points
+			for (size_t i = 0; i < mCurveGeometry.verts.size(); i++) {
+				// calculate the distance between the clicked point and this point
+				double distance = glm::distance(mCurveGeometry.verts[i], glm::vec3(xClick, yClick, 0.f));
+				// if the distance is less than the point size, then the point is clicked
+				if (distance < pointSize) {
+					pointIndex = i; // save the index of the clicked point
+					mouseOnPoint = true;
+					break;
+				}	
+			}
+		}
+		
+		if (mouseOnPoint) { // if a point is clicked, use the drag feature
+			Log::debug("Dragging control point based on mouse position");
+			mCurveGeometry.verts[pointIndex] = { xClick, yClick, 0.f };
+			mCurveGeometry.cols[pointIndex] = { 0.f, 0.f, 1.f }; // coloring point blue for debugging
+		} else { // if no point is clicked, insert a new point at where the mouse was clicked
+			Log::debug("Inserting control point based on the position clicked");
+			mCurveControls->wasClicked = false;
+			mCurveGeometry.verts.push_back({ xClick, yClick, 0.f });
+			mCurveGeometry.cols.push_back({ 0.f, 1.f, 0.f });
+		}
+	} else {
+		// if the mouse is released, reset the pointIndex and mouseOnPoint 
+		if (pointIndex != -1) {
+			mCurveGeometry.cols[pointIndex] = { 0.f, 1.f, 0.f };
+		}
+		mouseOnPoint = false;
+		pointIndex = -1;
 	}
+
+	mGPUGeometry.setVerts(mCurveGeometry.verts);
+	mGPUGeometry.setCols(mCurveGeometry.cols);
+	mPointGPUGeometry.setVerts(mCurveGeometry.verts);
+	mPointGPUGeometry.setCols(
+		std::vector<glm::vec3>(mCurveGeometry.verts.size(), { 1.f, 0.f, 0.f }));
+
+	// CPU_Geometry mCurve;
+	
+	// float dt = 1.f / static_cast<float>(mCurveControls->samples - 1);
+	// for (int i = 0; i < mCurveControls->samples; i++) {
+	// 	mCurve.verts.push_back(c(i * dt));
+	// 	mCurve.cols.push_back({ 1.f, 0.f, 0.f });
+	// }
+	// mPointGPUGeometry.setVerts(mCurve.verts);
+	// mPointGPUGeometry.setCols(mCurve.cols);
 }
 
 // Generate some initial points to show what the rendering system is doing at

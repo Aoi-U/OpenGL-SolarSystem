@@ -30,6 +30,8 @@ private:
   ShaderProgram mShader;
   Panel mPanel;
   std::shared_ptr<CurveEditorPanelRenderer> mPanelRenderer;
+  int pointIndex = -1;
+  bool mouseOnPoint = false;
 
   // Geometry
   CPU_Geometry mCurveGeometry;
@@ -38,4 +40,6 @@ private:
 
   // Private functions
   CPU_Geometry GenerateInitialGeometry();
+
+  bool IsDragging();
 };
