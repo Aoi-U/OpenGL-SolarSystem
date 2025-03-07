@@ -6,6 +6,7 @@
 #include "Panel.h"
 #include "ShaderProgram.h"
 #include "Window.h"
+#include "Camera.h"
 
 // forward declare classes that only exist in the cpp file
 class CurveEditorCallBack;
@@ -31,8 +32,11 @@ private:
   Panel mPanel;
   std::shared_ptr<CurveEditorPanelRenderer> mPanelRenderer;
   Window &window;
-  int pointIndex = -1;
+  Camera camera;
+  size_t pointIndex = -1;
   bool mouseOnPoint = false;
+  int moveSpeed = 1;
+  
 
   // Geometry
   CPU_Geometry mCurveGeometry;

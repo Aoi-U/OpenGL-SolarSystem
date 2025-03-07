@@ -9,6 +9,7 @@
 #include <imgui.h>
 #include <memory>
 #include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 class CurveEditorCallBack : public CallbackInterface {
 public:
@@ -60,8 +61,8 @@ public:
 	bool wasClicked = false;
 	bool deleteMode = false;
 	bool reset = false;
-	int xpos = 0, ypos = 0;
-	int xstart = 0, ystart = 0;
+	double xpos = 0, ypos = 0;
+	double xstart = 0, ystart = 0;
 	int samples = 10;
 private:
 };
@@ -73,14 +74,33 @@ public:
 	TurnTable3DViewerCallBack() {}
 
 	virtual void keyCallback(int key, int scancode, int action, int mods) {}
-	virtual void mouseButtonCallback(int button, int action, int mods) {}
-	virtual void cursorPosCallback(double xpos, double ypos) {}
-	virtual void scrollCallback(double xoffset, double yoffset) {}
+	virtual void mouseButtonCallback(int button, int action, int mods) {
+		if (button == GLFW_MOUSE_BUTTON_1 && action == GLFW_PRESS) {
+			wasClicked = true;
+		} else if (button == GLFW_MOUSE_BUTTON_1 && action == GLFW_RELEASE) {
+			wasClicked = false;
+		}
+	}
+	virtual void cursorPosCallback(double xpos, double ypos) {
+		this->xpos = xpos;
+		this->ypos = ypos;
+	}
+	virtual void scrollCallback(double xoffset, double yoffset) {
+		this->yoffset = yoffset;
+	}
 	virtual void windowSizeCallback(int width, int height) {
 
 		// The CallbackInterface::windowSizeCallback will call glViewport for us
 		CallbackInterface::windowSizeCallback(width, height);
 	}
+
+	int forward;
+	int backward;
+	int left;
+	int right;
+	double xpos = 0, ypos = 0;
+	double yoffset = 0;
+	bool wasClicked = false;
 };
 
 class CurveEditorPanelRenderer : public PanelRendererInterface {
@@ -174,7 +194,7 @@ private:
 
 CurveControl::CurveControl(Window& window)
 	: mShader("shaders/test.vert", "shaders/test.frag"),
-	mPanel(window.getGLFWwindow()), window(window) {
+	mPanel(window.getGLFWwindow()), window(window), camera(Camera(window)) {
 	mCurveControls = std::make_shared<CurveEditorCallBack>();
 	m3DCameraControls = std::make_shared<TurnTable3DViewerCallBack>();
 
@@ -204,6 +224,9 @@ CurveControl::CurveControl(Window& window)
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
+int prev = glfwGetTime();
+float rotation = 0.0f;
+
 void CurveControl::DrawGeometry() {
 	glm::vec3 backgroundColor = mPanelRenderer->getColor();
 
@@ -212,14 +235,30 @@ void CurveControl::DrawGeometry() {
 
 	mShader.use();
 
+	GLint editorLoc = glGetUniformLocation(mShader, "editor");
+	if (mPanelRenderer->getEditorMode()) {
+		glUniform1i(editorLoc, true);
+	} else {
+		glUniform1i(editorLoc, false);
+	}
+
+	GLint modelLoc = glGetUniformLocation(mShader, "model");
+	GLint viewLoc = glGetUniformLocation(mShader, "view");
+	GLint projLoc = glGetUniformLocation(mShader, "proj");
+
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(camera.getModel()));
+	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(camera.getView()));
+	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(camera.getProj()));
+
+
 	// Render the control points
 	glPointSize(mPanelRenderer->getPointSize());
 	mGPUGeometry.bind();
-	glDrawArrays(GL_POINTS, 0, mCurveGeometry.verts.size());
+	glDrawArrays(GL_POINTS, 0, (int)mCurveGeometry.verts.size());
 
 	// Render the curve that connects the control points
 	mPointGPUGeometry.bind();
-	glDrawArrays(GL_LINE_STRIP, 0, mCurveGeometry.verts.size());
+	glDrawArrays(GL_LINE_STRIP, 0, (int)mCurveGeometry.verts.size());
 
 	// disable sRGB for things like imgui
 	glDisable(GL_FRAMEBUFFER_SRGB);
@@ -282,7 +321,6 @@ glm::vec3 c(float t) {
 }
 
 void CurveControl::UpdateEditorMode() {
-	
 	if (mCurveControls->reset) {
 		ResetPanel();
 	} else if (mCurveControls->deleteMode) {	// check if deleteMode is enabled by the user
@@ -325,7 +363,14 @@ void CurveControl::UpdateEditorMode() {
 }
 
 void CurveControl::UpdateViewMode() {
+	// panning around origin
+	if (m3DCameraControls->wasClicked) {
+		// calculate mouse drag
 		
+	} else if (m3DCameraControls->yoffset != 0) {
+		camera.Zoom(m3DCameraControls->yoffset);
+
+	}
 }
 
 void CurveControl::Update() {
