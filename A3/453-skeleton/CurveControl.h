@@ -35,6 +35,9 @@ private:
   Camera camera;
   size_t pointIndex = -1;
   bool mouseOnPoint = false;
+  bool mouseDragging = false;
+  float xStart, yStart;
+  float yOffsetStart = 0;
   int moveSpeed = 1;
   
 

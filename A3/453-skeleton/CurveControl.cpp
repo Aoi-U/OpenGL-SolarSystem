@@ -82,11 +82,11 @@ public:
 		}
 	}
 	virtual void cursorPosCallback(double xpos, double ypos) {
-		this->xpos = xpos;
-		this->ypos = ypos;
+		this->xpos = (float)xpos;
+		this->ypos = (float)ypos;
 	}
 	virtual void scrollCallback(double xoffset, double yoffset) {
-		this->yoffset = yoffset;
+		this->yoffset = (float)yoffset;
 	}
 	virtual void windowSizeCallback(int width, int height) {
 
@@ -98,8 +98,8 @@ public:
 	int backward;
 	int left;
 	int right;
-	double xpos = 0, ypos = 0;
-	double yoffset = 0;
+	float xpos = 0, ypos = 0;
+	float yoffset = 0;
 	bool wasClicked = false;
 };
 
@@ -224,7 +224,7 @@ CurveControl::CurveControl(Window& window)
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
-int prev = glfwGetTime();
+double prev = glfwGetTime();
 float rotation = 0.0f;
 
 void CurveControl::DrawGeometry() {
@@ -280,8 +280,8 @@ void CurveControl::CreatePoint() {
 
 	Log::debug("Inserting control point based on the position clicked");
 	mCurveControls->wasClicked = false;
-	mCurveGeometry.verts.push_back({ xClick, yClick, 0.f });
-	mCurveGeometry.cols.push_back({ 0.f, 1.f, 0.f });
+	mCurveGeometry.verts.emplace_back(xClick, yClick, 0.f);
+	mCurveGeometry.cols.emplace_back(0.f, 1.f, 0.f);
 }
 
 void CurveControl::DeletePoint() {
@@ -365,12 +365,33 @@ void CurveControl::UpdateEditorMode() {
 void CurveControl::UpdateViewMode() {
 	// panning around origin
 	if (m3DCameraControls->wasClicked) {
-		// calculate mouse drag
-		
-	} else if (m3DCameraControls->yoffset != 0) {
-		camera.Zoom(m3DCameraControls->yoffset);
+		if (!mouseDragging) {
+			mouseDragging = true;
+			xStart = m3DCameraControls->xpos;
+			yStart = m3DCameraControls->ypos;
+		} else if (mouseDragging) {
+			float xEnd = m3DCameraControls->xpos;
+			float yEnd = m3DCameraControls->ypos;
 
+			float dx = xEnd - xStart;
+			float dy = yEnd - yStart;
+			std::cout << "dx: " << dx << " dy: " << dy << std::endl;
+			
+
+			camera.Move(dx, dy);
+
+			xStart = xEnd;
+			yStart = yEnd;
+		}
+	} else if (m3DCameraControls->yoffset != yOffsetStart) {
+		yOffsetStart = m3DCameraControls->yoffset;
+		std::cout << "yoffset: " << m3DCameraControls->yoffset << std::endl;
+		camera.Zoom(m3DCameraControls->yoffset);
+	} else {
+		mouseDragging = false;
 	}
+
+	
 }
 
 void CurveControl::Update() {

@@ -7,7 +7,7 @@ class Camera
 public:
     Camera(Window& window);
 
-    void Move(float theta, float phi); // pans the camera about the origin
+    void Move(float x, float y); // pans the camera about the origin
     void Zoom(float zoom); // zooms the camera towards/away from the camera
     glm::mat4 getModel(); // returns the model matrix
     glm::mat4 getView(); // returns the view matrix
@@ -18,4 +18,11 @@ private:
     glm::mat4 proj; 
     glm::mat4 view;
     glm::mat4 model;
+
+    float radius = 2.0f;
+    float zoom = -1.0f;
+
+    float phi; // angle in the xz plane
+    float theta; // angle in the xy plane
+    
 };
