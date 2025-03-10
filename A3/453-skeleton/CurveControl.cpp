@@ -17,12 +17,6 @@ public:
 
 	virtual void keyCallback(int key, int scancode, int action, int mods) override {
 		Log::info("KeyCallback: key={}, action={}", key, action);
-
-		if (key == GLFW_KEY_R && action == GLFW_PRESS) {
-			reset = true;
-		} else if (key == GLFW_KEY_R && action == GLFW_RELEASE) {
-			reset = false;
-		}
 		
 		if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
 			deleteMode = true;
@@ -58,12 +52,9 @@ public:
 		CallbackInterface::windowSizeCallback(width, height);
 	}
 
-	bool wasClicked = false;
-	bool deleteMode = false;
-	bool reset = false;
-	double xpos = 0, ypos = 0;
-	double xstart = 0, ystart = 0;
-	int samples = 10;
+	bool wasClicked = false; // mouse click
+	bool deleteMode = false; // delete mode enabled when holding space
+	double xpos = 0, ypos = 0;  // mouse position
 private:
 };
 
@@ -94,20 +85,15 @@ public:
 		CallbackInterface::windowSizeCallback(width, height);
 	}
 
-	int forward;
-	int backward;
-	int left;
-	int right;
-	float xpos = 0, ypos = 0;
-	float yoffset = 0;
-	bool wasClicked = false;
+	float xpos = 0, ypos = 0; // mouse position
+	float yoffset = 0; // scroll wheel movement
+	bool wasClicked = false; // mouse click
 };
 
 class CurveEditorPanelRenderer : public PanelRendererInterface {
 public:
 	CurveEditorPanelRenderer()
-		: inputText(""), editorMode(true), pointSize(5.0f), dragValue(0.0f),
-		inputValue(0.0f), checkboxValue(false), comboSelection(0) {
+		: reset(false), editorMode(true), bezierMode(true), solidMode(true), pointSize(5.0f), curveRes(10), checkboxValue(false), comboSelection(0) {
 		// Initialize options for the combo box
 		options[0] = "Option 1";
 		options[1] = "Option 2";
@@ -126,38 +112,28 @@ public:
 		ImGui::Text("Selected Color: R: %.3f, G: %.3f, B: %.3f", colorValue[0],
 			colorValue[1], colorValue[2]);
 
-		// Text input
-		ImGui::InputText("Input Text", inputText, IM_ARRAYSIZE(inputText));
+		reset = ImGui::Button("Reset");
 
-		// Display the input text
-		ImGui::Text("You entered: %s", inputText);
-
-		// Button
-		if (ImGui::Button("Change Editor Mode")) {
+		// change between editor and view mode
+		if (ImGui::Button(editorMode ? "Switch to View Mode" : "Switch to Editor Mode")) {
 			editorMode = !editorMode;
+		}		
+
+		// change curve modes
+		if (ImGui::Button(bezierMode ? "Switch to B-Spline mode" : "Switch to Bezier mode")) {
+			bezierMode = !bezierMode;
 		}
 
-		// Scrollable block
-		ImGui::TextWrapped("Scrollable Block:");
-		ImGui::BeginChild("ScrollableChild", ImVec2(0, 100),
-			true); // Create a scrollable child
-		for (int i = 0; i < 20; i++) {
-			ImGui::Text("Item %d", i);
+		// chnage between wireframe and solid mode
+		if (ImGui::Button("Switch to Wireframe Mode")) {
+			solidMode = !solidMode;
 		}
-		ImGui::EndChild();
 
 		// Float slider
 		ImGui::SliderFloat("Float Slider", &pointSize, 5.0f, 100.0f,
 			"Point Size: %.3f");
 
-		// Float drag
-		ImGui::DragFloat("Float Drag", &dragValue, 0.1f, 0.0f, 100.0f,
-			"Drag Value: %.3f");
-
-		// Float input
-		ImGui::InputFloat("Float Input", &inputValue, 0.1f, 1.0f,
-			"Input Value: %.3f");
-
+		ImGui::SliderInt("Curve Resolution", &curveRes, 0, 100, "Curve Resolution: %d");
 		// Checkbox
 		ImGui::Checkbox("Enable Feature", &checkboxValue);
 		ImGui::Text("Feature Enabled: %s", checkboxValue ? "Yes" : "No");
@@ -169,8 +145,6 @@ public:
 
 		// Displaying current values
 		ImGui::Text("Point Size: %.3f", pointSize);
-		ImGui::Text("Drag Value: %.3f", dragValue);
-		ImGui::Text("Input Value: %.3f", inputValue);
 	}
 
 	glm::vec3 getColor() const {
@@ -178,23 +152,28 @@ public:
 	}
 
 	float getPointSize() const { return pointSize; }
-	bool getEditorMode() const { return editorMode;}
+	int getCurveResolution() const { return curveRes; }
+	bool isEditorMode() const { return editorMode; }
+	bool isReset() const { return reset; }
+	bool isBezierMode() const { return bezierMode; }
+	bool isSolidMode() const { return solidMode; }
 
 private:
 	float colorValue[3];    // Array for RGB color values
-	char inputText[256];    // Buffer for input text
 	float pointSize;        // Value for float slider
-	float dragValue;        // Value for drag input
-	float inputValue;       // Value for float input
+	int curveRes; 			// number of points on the curve
 	bool checkboxValue;     // Value for checkbox
-	bool editorMode;        // Value for editor mode
+	bool reset;			 	// resets the editor/view depending on the mode
+	bool editorMode;        // change between editor and view mode
+	bool bezierMode;		// change between bezier and b-spline mode
+	bool solidMode;			// change between wireframe and solid mode
 	int comboSelection;     // Index of selected option in combo box
 	const char* options[3]; // Options for the combo box
 };
 
 CurveControl::CurveControl(Window& window)
 	: mShader("shaders/test.vert", "shaders/test.frag"),
-	mPanel(window.getGLFWwindow()), window(window), camera(Camera(window)) {
+	mPanel(window.getGLFWwindow()), window(window), camera(window) {
 	mCurveControls = std::make_shared<CurveEditorCallBack>();
 	m3DCameraControls = std::make_shared<TurnTable3DViewerCallBack>();
 
@@ -207,15 +186,19 @@ CurveControl::CurveControl(Window& window)
 
 	mPanel.setPanelRenderer(mPanelRenderer);
 
-	mCurveGeometry = GenerateInitialGeometry();
-	mGPUGeometry.setVerts(mCurveGeometry.verts);
-	mGPUGeometry.setCols(mCurveGeometry.cols);
+	mControlPointGeometry = GenerateInitialGeometry();
+	mGPUGeometry.setVerts(mControlPointGeometry.verts);
+	mGPUGeometry.setCols(mControlPointGeometry.cols);
 
 	// Using two different buffers for the control points and the lines themselves
 	// makes it easier to highlight the selected point
-	mPointGPUGeometry.setVerts(mCurveGeometry.verts);
+	mPointGPUGeometry.setVerts(mControlPointGeometry.verts);
 	mPointGPUGeometry.setCols(
-		std::vector<glm::vec3>(mCurveGeometry.verts.size(), { 1.f, 0.f, 0.f }));
+		std::vector<glm::vec3>(mControlPointGeometry.verts.size(), { 1.f, 0.f, 0.f }));
+
+	GenerateBezierCurve();
+	mCurveGPUGeometry.setVerts(mCurveGeometry.verts);
+	mCurveGPUGeometry.setCols(mCurveGeometry.cols);
 
 	// Setup OpenGL state that stays constant for most of the program
 	glEnable(GL_LINE_SMOOTH);
@@ -224,23 +207,17 @@ CurveControl::CurveControl(Window& window)
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
-double prev = glfwGetTime();
-float rotation = 0.0f;
 
 void CurveControl::DrawGeometry() {
 	glm::vec3 backgroundColor = mPanelRenderer->getColor();
-
+	
 	glClearColor(backgroundColor.r, backgroundColor.g, backgroundColor.b, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+	
 	mShader.use();
-
+	
 	GLint editorLoc = glGetUniformLocation(mShader, "editor");
-	if (mPanelRenderer->getEditorMode()) {
-		glUniform1i(editorLoc, true);
-	} else {
-		glUniform1i(editorLoc, false);
-	}
+	glUniform1i(editorLoc, mPanelRenderer->isEditorMode());
 
 	GLint modelLoc = glGetUniformLocation(mShader, "model");
 	GLint viewLoc = glGetUniformLocation(mShader, "view");
@@ -254,34 +231,41 @@ void CurveControl::DrawGeometry() {
 	// Render the control points
 	glPointSize(mPanelRenderer->getPointSize());
 	mGPUGeometry.bind();
-	glDrawArrays(GL_POINTS, 0, (int)mCurveGeometry.verts.size());
-
-	// Render the curve that connects the control points
+	glDrawArrays(GL_POINTS, 0, (int)mControlPointGeometry.verts.size());
+	
+	// Render the line that connects the control points
 	mPointGPUGeometry.bind();
+	glDrawArrays(GL_LINE_STRIP, 0, (int)mControlPointGeometry.verts.size());
+	
+	// render the bezier/b-spline curve
+	mCurveGPUGeometry.bind();
 	glDrawArrays(GL_LINE_STRIP, 0, (int)mCurveGeometry.verts.size());
-
+	
+	
 	// disable sRGB for things like imgui
 	glDisable(GL_FRAMEBUFFER_SRGB);
 	mPanel.render();
 }
 
 void CurveControl::DragPoint() {
+	// calculate the world space position of where the mouse was clicked
 	double xClick = (mCurveControls->xpos - 400.0) / 400.0;
 	double yClick = (400.0 - mCurveControls->ypos) / 400.0;
-
-	Log::debug("Dragging control point based on mouse position");
-	mCurveGeometry.verts[pointIndex] = { xClick, yClick, 0.f };
-	mCurveGeometry.cols[pointIndex] = { 0.f, 0.f, 1.f }; // coloring point blue for debugging
+	
+	// update the position of the clicked control point
+	mControlPointGeometry.verts[pointIndex] = { xClick, yClick, 0.f };
+	mControlPointGeometry.cols[pointIndex] = { 0.f, 0.f, 1.f }; // coloring point blue just to make it easier to see
 }
 
 void CurveControl::CreatePoint() {
+	// calculate the world space position of where the mouse was clicked
 	double xClick = (mCurveControls->xpos - 400.0) / 400.0;
 	double yClick = (400.0 - mCurveControls->ypos) / 400.0;
-
-	Log::debug("Inserting control point based on the position clicked");
+	
+	// add a new control point at the clicked position
 	mCurveControls->wasClicked = false;
-	mCurveGeometry.verts.emplace_back(xClick, yClick, 0.f);
-	mCurveGeometry.cols.emplace_back(0.f, 1.f, 0.f);
+	mControlPointGeometry.verts.emplace_back(xClick, yClick, 0.f);
+	mControlPointGeometry.cols.emplace_back(0.f, 1.f, 0.f);
 }
 
 void CurveControl::DeletePoint() {
@@ -292,37 +276,34 @@ void CurveControl::DeletePoint() {
 		
 		// size of points
 		double pointSize = mPanelRenderer->getPointSize() / 1000.0;
-
+		
 		// check if the clicked position overlaps with any of the control points
-		for (size_t i = 0; i < mCurveGeometry.verts.size(); i++) {
+		for (size_t i = 0; i < mControlPointGeometry.verts.size(); i++) {
 			// calculate the distance between the clicked point and this point
-			double distance = glm::distance(mCurveGeometry.verts[i], glm::vec3(xClick, yClick, 0.f));
+			double distance = glm::distance(mControlPointGeometry.verts[i], glm::vec3(xClick, yClick, 0.f));
 			// if the distance is less than the point size, point was clicked
 			if (distance < pointSize) {
 				// remove this control point
-				mCurveGeometry.verts.erase(mCurveGeometry.verts.begin() + i);
-				mCurveGeometry.cols.erase(mCurveGeometry.cols.begin() + i);
+				mControlPointGeometry.verts.erase(mControlPointGeometry.verts.begin() + i);
+				mControlPointGeometry.cols.erase(mControlPointGeometry.cols.begin() + i);
 				break;
 			}
 		}
 	}
 }
 
-void CurveControl::ResetPanel() {
+void CurveControl::ResetEditor() {
+	mControlPointGeometry.verts.clear();
+	mControlPointGeometry.cols.clear();
 	mCurveGeometry.verts.clear();
 	mCurveGeometry.cols.clear();
 	mouseOnPoint = false;
 	pointIndex = -1;
 }
 
-static const float two_pi = glm::pi<float>() * 2.f;
-glm::vec3 c(float t) {
-	return 0.5f * glm::vec3(glm::cos(two_pi * t), glm::sin(two_pi * t), 0.f);
-}
-
 void CurveControl::UpdateEditorMode() {
-	if (mCurveControls->reset) {
-		ResetPanel();
+	if (mPanelRenderer->isReset()) {
+		ResetEditor();
 	} else if (mCurveControls->deleteMode) {	// check if deleteMode is enabled by the user
 		DeletePoint();
 	} else if (mCurveControls->wasClicked) { 
@@ -332,12 +313,12 @@ void CurveControl::UpdateEditorMode() {
 		
 		// size of points
 		double pointSize = mPanelRenderer->getPointSize() / 1000.0; 
-
+		
 		if (!mouseOnPoint) {
 			// check if the clicked position overlaps with any of the control points
-			for (size_t i = 0; i < mCurveGeometry.verts.size(); i++) {
+			for (size_t i = 0; i < mControlPointGeometry.verts.size(); i++) {
 				// calculate the distance between the clicked point and this point
-				double distance = glm::distance(mCurveGeometry.verts[i], glm::vec3(xClick, yClick, 0.f));
+				double distance = glm::distance(mControlPointGeometry.verts[i], glm::vec3(xClick, yClick, 0.f));
 				// if the distance is less than the point size, then the point is clicked
 				if (distance < pointSize) {
 					pointIndex = i; // save the index of the clicked point
@@ -355,7 +336,7 @@ void CurveControl::UpdateEditorMode() {
 	} else {
 		// if the mouse is released, reset the pointIndex and mouseOnPoint 
 		if (pointIndex != -1) {
-			mCurveGeometry.cols[pointIndex] = { 0.f, 1.f, 0.f };
+			mControlPointGeometry.cols[pointIndex] = { 0.f, 1.f, 0.f };
 		}
 		mouseOnPoint = false;
 		pointIndex = -1;
@@ -363,41 +344,71 @@ void CurveControl::UpdateEditorMode() {
 }
 
 void CurveControl::UpdateViewMode() {
-	// panning around origin
-	float dx{0}, dy{0};
-	if (m3DCameraControls->wasClicked) {
-		if (!mouseDragging) {
+	if (mPanelRenderer->isReset()) { 
+		camera.Reset();
+	} else if (m3DCameraControls->wasClicked) { 
+		// if the mouse is not being dragged, start dragging the camera
+		if (!mouseDragging) { 
 			mouseDragging = true;
+			// position of where the mouse was first clicked
 			xStart = m3DCameraControls->xpos;
 			yStart = m3DCameraControls->ypos;
 		} 
 		
+		// orbit the camera around the origin based on the dragged mouse movement
 		if (mouseDragging) {
 			float xEnd = m3DCameraControls->xpos;
 			float yEnd = m3DCameraControls->ypos;
+			
+			// calculate the change in theta and phi based on the mouse movement
+			float deltaTheta = xEnd - xStart;
+			float deltaPhi = yEnd - yStart;
+			
+			camera.Move(deltaTheta, deltaPhi); // move the camera by theta and phi
 
-			float dragTheta = (xEnd - xStart) * 0.3f;
-			float dragPhi = (yEnd - yStart) * 0.3f;
-
-			camera.Move(dragTheta, dragPhi);
 			xStart = xEnd;
 			yStart = yEnd;
 		}
 	} else if (m3DCameraControls->yoffset != yOffsetStart) {
-		yOffsetStart = m3DCameraControls->yoffset;
-		std::cout << "yoffset: " << m3DCameraControls->yoffset << std::endl;
+		// zoom the camera based on the scroll wheel movement
 		camera.Zoom(m3DCameraControls->yoffset);
+		yOffsetStart = m3DCameraControls->yoffset;
 	} else {
 		mouseDragging = false;
 	}
+}
 
-	
+void CurveControl::GenerateBezierCurve() {
+	if (mControlPointGeometry.verts.size() > 1) {
+		// generates a bezier curve from the control points
+		mCurveGeometry.verts.clear();
+		mCurveGeometry.cols.clear();
+		for (size_t p = 0; p < mPanelRenderer->getCurveResolution(); p++) {
+			glm::vec3 point = deCasteljau(mControlPointGeometry.verts, mControlPointGeometry.verts.size(), (float)p / (mPanelRenderer->getCurveResolution() - 1));
+			mCurveGeometry.verts.emplace_back(point);
+			mCurveGeometry.cols.emplace_back(0.f, 0.f, 1.f);
+		}
+	}
+}
+
+glm::vec3 CurveControl::deCasteljau(std::vector<glm::vec3> points, size_t d, float u) {
+	for (size_t i = 1; i < d; i++) {
+		for (int j = 0; j < d - i; j++) {
+			points[j] = (1 - u) * points[j] + u * points[j + 1];
+		}
+	}
+	return points[0];
+}
+
+void CurveControl::GenerateBSplineCurve() {
+	mCurveGeometry.verts.clear();
+	mCurveGeometry.cols.clear();
 }
 
 void CurveControl::Update() {
 	// Use this function to process logic and update things based on user inputs
 	//Example: generate a new control point
-	if (mPanelRenderer->getEditorMode()) {
+	if (mPanelRenderer->isEditorMode()) {
 		window.setCallbacks(mCurveControls);
 		UpdateEditorMode();
 	} else {
@@ -405,21 +416,16 @@ void CurveControl::Update() {
 		UpdateViewMode();
 	}
 
-	mGPUGeometry.setVerts(mCurveGeometry.verts);
-	mGPUGeometry.setCols(mCurveGeometry.cols);
-	mPointGPUGeometry.setVerts(mCurveGeometry.verts);
+	mGPUGeometry.setVerts(mControlPointGeometry.verts);
+	mGPUGeometry.setCols(mControlPointGeometry.cols);
+	mPointGPUGeometry.setVerts(mControlPointGeometry.verts);
 	mPointGPUGeometry.setCols(
-		std::vector<glm::vec3>(mCurveGeometry.verts.size(), { 1.f, 0.f, 0.f }));
+		std::vector<glm::vec3>(mControlPointGeometry.verts.size(), { 1.f, 0.f, 0.f }));
 
-	// CPU_Geometry mCurve;
-	
-	// float dt = 1.f / static_cast<float>(mCurveControls->samples - 1);
-	// for (int i = 0; i < mCurveControls->samples; i++) {
-	// 	mCurve.verts.push_back(c(i * dt));
-	// 	mCurve.cols.push_back({ 1.f, 0.f, 0.f });
-	// }
-	// mPointGPUGeometry.setVerts(mCurve.verts);
-	// mPointGPUGeometry.setCols(mCurve.cols);
+	// set the bezier/b-spline curve geometry based on the current mode
+	mPanelRenderer->isBezierMode() ? GenerateBezierCurve() : GenerateBSplineCurve();
+	mCurveGPUGeometry.setVerts(mCurveGeometry.verts);
+	mCurveGPUGeometry.setCols(mCurveGeometry.cols);
 }
 
 // Generate some initial points to show what the rendering system is doing at

@@ -6,10 +6,11 @@ Camera::Camera(Window& window)
 {
     int width = window.getWidth();
     int height = window.getHeight();
+
     // set initial position of the camera
-    radius = 2.0f;   
-    theta = 45.0f;
-    phi = 45.0f;
+    radius = defaultRadius;
+    theta = defaultTheta;
+    phi = defaultPhi;
 
     float rTheta = glm::radians(theta);
     float rPhi = glm::radians(phi);
@@ -21,54 +22,56 @@ Camera::Camera(Window& window)
 }
 
 void Camera::Move(float dTheta, float dPhi) { 
-    theta += dTheta;
-    phi += dPhi;
+    // update theta and phi by the new delta values
+    theta += dTheta * sensitivity;
+    phi += dPhi * sensitivity;
 
-    // clamps phi between -90 and 90 to prevent flipping
-    if (phi < -90.0) {
-        phi = -90.0f;
-    } else if (phi > 90.0f) {
-        phi = 90.0f;
+    // clamps phi between -89.9 and 89.9 to prevent flipping
+    if (phi < -89.9) {
+        phi = -89.9f;
+    } else if (phi > 89.9f) {
+        phi = 89.9f;
     }
 
-    float rTheta = glm::radians(theta);
-    float rPhi = glm::radians(phi);
-
-    // calculate the new position of the camera
-    float x = radius * glm::cos(rTheta) * glm::cos(rPhi);
-    float y = radius * glm::sin(rPhi);
-    float z = radius * glm::sin(rTheta) * glm::cos(rPhi);
-    view = glm::lookAt(glm::vec3(x, y, z), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    UpdateView(); // update the view matrix
 }
 
 void Camera::Zoom(float zoom) {
-    radius += zoom;
+    radius += zoom; // update the radius by the zoom value
+
+    // clamps the radius between 10e-6 and 100 to prevent flipping
     if (radius < 10e-6) {
         radius = 10e-6f;
     } else if (radius > 100.0f) {
         radius = 100.0f;
     } 
 
+    UpdateView(); // update the view matrix
+}
+
+void Camera::Reset() {
+    // reset the camera to its initial position
+    radius = defaultRadius;
+    theta = defaultTheta;
+    phi = defaultPhi;
+    UpdateView();
+}
+
+glm::mat4 Camera::getModel() { return model; }
+
+glm::mat4 Camera::getProj() { return proj; }
+
+glm::mat4 Camera::getView(){ return view; }
+
+void Camera::UpdateView() {
     float rTheta = glm::radians(theta);
     float rPhi = glm::radians(phi);
-    // calculate the new position of the camera
+
+    // calculate the x y z position of the camera based on the radius, theta, and phi
     float x = radius * glm::cos(rTheta) * glm::cos(rPhi);
     float y = radius * glm::sin(rPhi);
     float z = radius * glm::sin(rTheta) * glm::cos(rPhi);
+
+    // update the view matrix
     view = glm::lookAt(glm::vec3(x, y, z), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-}
-
-glm::mat4 Camera::getModel() 
-{
-    return model;
-}
-
-glm::mat4 Camera::getProj()
-{
-    return proj;
-}
-
-glm::mat4 Camera::getView()
-{
-    return view;
 }
