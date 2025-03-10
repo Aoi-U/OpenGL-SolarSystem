@@ -364,22 +364,22 @@ void CurveControl::UpdateEditorMode() {
 
 void CurveControl::UpdateViewMode() {
 	// panning around origin
+	float dx{0}, dy{0};
 	if (m3DCameraControls->wasClicked) {
 		if (!mouseDragging) {
 			mouseDragging = true;
 			xStart = m3DCameraControls->xpos;
 			yStart = m3DCameraControls->ypos;
-		} else if (mouseDragging) {
+		} 
+		
+		if (mouseDragging) {
 			float xEnd = m3DCameraControls->xpos;
 			float yEnd = m3DCameraControls->ypos;
 
-			float dx = xEnd - xStart;
-			float dy = yEnd - yStart;
-			std::cout << "dx: " << dx << " dy: " << dy << std::endl;
-			
+			float dragTheta = (xEnd - xStart) * 0.3f;
+			float dragPhi = (yEnd - yStart) * 0.3f;
 
-			camera.Move(dx, dy);
-
+			camera.Move(dragTheta, dragPhi);
 			xStart = xEnd;
 			yStart = yEnd;
 		}

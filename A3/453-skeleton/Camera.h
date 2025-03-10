@@ -19,9 +19,7 @@ private:
     glm::mat4 view;
     glm::mat4 model;
 
-    float radius = 2.0f;
-    float zoom = -1.0f;
-
+    float radius; // distance from the origin
     float phi; // angle in the xz plane
     float theta; // angle in the xy plane
     

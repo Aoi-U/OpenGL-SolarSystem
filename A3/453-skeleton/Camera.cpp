@@ -6,33 +6,39 @@ Camera::Camera(Window& window)
 {
     int width = window.getWidth();
     int height = window.getHeight();
+    // set initial position of the camera
     radius = 2.0f;   
     theta = 45.0f;
-    phi = 0.0f;
+    phi = 45.0f;
 
-    view = glm::rotate(view, glm::radians(theta), glm::vec3(0.0f, 0.0f, 1.0f));
-    view = glm::rotate(view, glm::radians(phi), glm::vec3(0.0f, 1.0f, 0.0f));
-    float x = radius * glm::sin(glm::radians(phi)) * glm::cos(glm::radians(theta));
-    float y = radius * glm::sin(glm::radians(phi)) * glm::sin(glm::radians(theta));
-    float z = radius * glm::cos(glm::radians(phi));
-    view = glm::translate(view, glm::vec3(x, y, z));
+    float rTheta = glm::radians(theta);
+    float rPhi = glm::radians(phi);
+    float x = radius * glm::cos(rTheta) * glm::cos(rPhi);
+    float y = radius * glm::sin(rPhi);
+    float z = radius * glm::sin(rTheta) * glm::cos(rPhi);
     view = glm::lookAt(glm::vec3(x, y, z), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    
     proj = glm::perspective(glm::radians(45.0f), (float)(width/height), 0.1f, 100.0f);  
 }
 
-void Camera::Move(float x, float z) {   
-    theta += x * 0.1f;
-    phi += z * 0.1f;
-    
-    // translate view by its inverse
-    view = glm::translate(view, glm::vec3(0.0f, 0.0f, 0.0f));
-    // rotate view
-    view = glm::rotate(view, glm::radians(theta), glm::vec3(0.0f, 1.0f, 0.0f));
-    view = glm::rotate(view, glm::radians(phi), glm::vec3(1.0f, 0.0f, 0.0f));
-    // translate back
-    view = glm::translate(view, glm::vec3(0.0f, 0.0f, 0.0f));
-    
+void Camera::Move(float dTheta, float dPhi) { 
+    theta += dTheta;
+    phi += dPhi;
+
+    // clamps phi between -90 and 90 to prevent flipping
+    if (phi < -90.0) {
+        phi = -90.0f;
+    } else if (phi > 90.0f) {
+        phi = 90.0f;
+    }
+
+    float rTheta = glm::radians(theta);
+    float rPhi = glm::radians(phi);
+
+    // calculate the new position of the camera
+    float x = radius * glm::cos(rTheta) * glm::cos(rPhi);
+    float y = radius * glm::sin(rPhi);
+    float z = radius * glm::sin(rTheta) * glm::cos(rPhi);
+    view = glm::lookAt(glm::vec3(x, y, z), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
 void Camera::Zoom(float zoom) {
@@ -43,13 +49,13 @@ void Camera::Zoom(float zoom) {
         radius = 100.0f;
     } 
 
-    float x = radius * glm::sin(glm::radians(phi)) * glm::cos(glm::radians(theta));
-    float y = radius * glm::sin(glm::radians(phi)) * glm::sin(glm::radians(theta));
-    float z = radius * glm::cos(glm::radians(phi));
+    float rTheta = glm::radians(theta);
+    float rPhi = glm::radians(phi);
+    // calculate the new position of the camera
+    float x = radius * glm::cos(rTheta) * glm::cos(rPhi);
+    float y = radius * glm::sin(rPhi);
+    float z = radius * glm::sin(rTheta) * glm::cos(rPhi);
     view = glm::lookAt(glm::vec3(x, y, z), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    
-    
-    
 }
 
 glm::mat4 Camera::getModel() 
