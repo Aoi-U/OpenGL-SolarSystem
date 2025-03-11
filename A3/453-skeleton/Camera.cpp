@@ -21,7 +21,7 @@ Camera::Camera(Window& window)
     proj = glm::perspective(glm::radians(45.0f), (float)(width/height), 0.1f, 100.0f);  
 }
 
-void Camera::Move(float dTheta, float dPhi) { 
+void Camera::Move(const float& dTheta, const float& dPhi) { 
     // update theta and phi by the new delta values
     theta += dTheta * sensitivity;
     phi += dPhi * sensitivity;
@@ -36,7 +36,7 @@ void Camera::Move(float dTheta, float dPhi) {
     UpdateView(); // update the view matrix
 }
 
-void Camera::Zoom(float zoom) {
+void Camera::Zoom(const float& zoom) {
     radius += zoom; // update the radius by the zoom value
 
     // clamps the radius between 10e-6 and 100 to prevent flipping
@@ -45,6 +45,15 @@ void Camera::Zoom(float zoom) {
     } else if (radius > 100.0f) {
         radius = 100.0f;
     } 
+
+    float rTheta = glm::radians(theta);
+    float rPhi = glm::radians(phi);
+
+    // calculate the x y z position of the camera based on the radius, theta, and phi
+    float x = radius * glm::cos(rTheta) * glm::cos(rPhi);
+    float y = radius * glm::sin(rPhi);
+    float z = radius * glm::sin(rTheta) * glm::cos(rPhi);
+
 
     UpdateView(); // update the view matrix
 }

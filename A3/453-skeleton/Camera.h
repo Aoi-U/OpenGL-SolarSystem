@@ -8,8 +8,8 @@ class Camera
 public:
     Camera(Window& window);
 
-    void Move(float dTheta, float dPhi); // pans the camera about the origin
-    void Zoom(float zoom); // zooms the camera towards/away from the origin
+    void Move(const float& dTheta, const float& dPhi); // pans the camera about the origin
+    void Zoom(const float& zoom); // zooms the camera towards/away from the origin
     void Reset(); // resets the camera to its initial position
     glm::mat4 getModel(); // returns the model matrix
     glm::mat4 getView(); // returns the view matrix

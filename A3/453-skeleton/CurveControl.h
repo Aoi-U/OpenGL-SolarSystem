@@ -50,6 +50,8 @@ private:
   CPU_Geometry GenerateInitialGeometry();
   void GenerateBezierCurve(); // generates a bezier curve from user created control points
   void  GenerateBSplineCurve(); // generates a quadratic b-spline curve from user created control points
+  void GenerateSurfaceOfRevolution(); // generates a surface of revolution from the control points
+  void GenerateTensorProduct(); // generates a tensor product surface 
   glm::vec3 deCasteljau(std::vector<glm::vec3> points, size_t d, float u); // de Casteljau algorithm for bezier curve
 
   void DragPoint(); // drags a control point based on the mouse position

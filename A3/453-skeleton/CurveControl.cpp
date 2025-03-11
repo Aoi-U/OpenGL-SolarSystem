@@ -93,11 +93,12 @@ public:
 class CurveEditorPanelRenderer : public PanelRendererInterface {
 public:
 	CurveEditorPanelRenderer()
-		: reset(false), editorMode(true), bezierMode(true), solidMode(true), pointSize(5.0f), curveRes(10), checkboxValue(false), comboSelection(0) {
+		: reset(false), bezierMode(true), solidMode(true), pointSize(5.0f), curveRes(10), checkboxValue(false), comboSelection(0) {
 		// Initialize options for the combo box
-		options[0] = "Option 1";
-		options[1] = "Option 2";
-		options[2] = "Option 3";
+		options[0] = "2D Editor";
+		options[1] = "3D View";
+		options[2] = "3D Surface of revolution";
+		options[3] = "Tensor Product Surfaces";
 
 		// Initialize color (white by default)
 		colorValue[0] = 1.0f; // R
@@ -114,19 +115,29 @@ public:
 
 		reset = ImGui::Button("Reset");
 
-		// change between editor and view mode
-		if (ImGui::Button(editorMode ? "Switch to View Mode" : "Switch to Editor Mode")) {
-			editorMode = !editorMode;
-		}		
+		// // change between editor and view mode
+		// if (ImGui::Button(editorMode ? "Switch to 3D Mode" : "Switch to 2D Mode")) {
+		// 	editorMode = !editorMode;
+		// }		
 
-		// change curve modes
-		if (ImGui::Button(bezierMode ? "Switch to B-Spline mode" : "Switch to Bezier mode")) {
-			bezierMode = !bezierMode;
+		// Combo box
+		
+		ImGui::Combo("View Mode", &comboSelection, options,
+			IM_ARRAYSIZE(options));
+		ImGui::Text("Selected: %s", options[comboSelection]);
+
+		if (comboSelection == 2 || comboSelection == 3) {
+			// change between wireframe and solid mode
+			if (ImGui::Button(solidMode ? "Switch to Wireframe Mode" : "Switch to solid mode")) {
+				solidMode = !solidMode;
+			}
 		}
-
-		// chnage between wireframe and solid mode
-		if (ImGui::Button("Switch to Wireframe Mode")) {
-			solidMode = !solidMode;
+		
+		if (comboSelection == 0 || comboSelection == 1) {
+			// change curve modes
+			if (ImGui::Button(bezierMode ? "Switch to B-Spline mode" : "Switch to Bezier mode")) {
+				bezierMode = !bezierMode;
+			}
 		}
 
 		// Float slider
@@ -138,10 +149,7 @@ public:
 		ImGui::Checkbox("Enable Feature", &checkboxValue);
 		ImGui::Text("Feature Enabled: %s", checkboxValue ? "Yes" : "No");
 
-		// Combo box
-		ImGui::Combo("Select an Option", &comboSelection, options,
-			IM_ARRAYSIZE(options));
-		ImGui::Text("Selected: %s", options[comboSelection]);
+
 
 		// Displaying current values
 		ImGui::Text("Point Size: %.3f", pointSize);
@@ -153,7 +161,9 @@ public:
 
 	float getPointSize() const { return pointSize; }
 	int getCurveResolution() const { return curveRes; }
-	bool isEditorMode() const { return editorMode; }
+	bool isEditorMode() const { return comboSelection == 0; }
+	bool isTensorMode() const { return comboSelection == 3; }
+	int viewMode() const { return comboSelection; }
 	bool isReset() const { return reset; }
 	bool isBezierMode() const { return bezierMode; }
 	bool isSolidMode() const { return solidMode; }
@@ -164,11 +174,10 @@ private:
 	int curveRes; 			// number of points on the curve
 	bool checkboxValue;     // Value for checkbox
 	bool reset;			 	// resets the editor/view depending on the mode
-	bool editorMode;        // change between editor and view mode
 	bool bezierMode;		// change between bezier and b-spline mode
 	bool solidMode;			// change between wireframe and solid mode
 	int comboSelection;     // Index of selected option in combo box
-	const char* options[3]; // Options for the combo box
+	const char* options[4]; // Options for the combo box
 };
 
 CurveControl::CurveControl(Window& window)
@@ -282,7 +291,7 @@ void CurveControl::DeletePoint() {
 			// calculate the distance between the clicked point and this point
 			double distance = glm::distance(mControlPointGeometry.verts[i], glm::vec3(xClick, yClick, 0.f));
 			// if the distance is less than the point size, point was clicked
-			if (distance < pointSize) {
+			if (distance <= pointSize) {
 				// remove this control point
 				mControlPointGeometry.verts.erase(mControlPointGeometry.verts.begin() + i);
 				mControlPointGeometry.cols.erase(mControlPointGeometry.cols.begin() + i);
@@ -312,7 +321,7 @@ void CurveControl::UpdateEditorMode() {
 		double yClick = (400.0 - mCurveControls->ypos) / 400.0;
 		
 		// size of points
-		double pointSize = mPanelRenderer->getPointSize() / 1000.0; 
+		double pointSize = mPanelRenderer->getPointSize() / 800.0; 
 		
 		if (!mouseOnPoint) {
 			// check if the clicked position overlaps with any of the control points
@@ -383,14 +392,16 @@ void CurveControl::GenerateBezierCurve() {
 		// generates a bezier curve from the control points
 		mCurveGeometry.verts.clear();
 		mCurveGeometry.cols.clear();
-		for (size_t p = 0; p < mPanelRenderer->getCurveResolution(); p++) {
-			glm::vec3 point = deCasteljau(mControlPointGeometry.verts, mControlPointGeometry.verts.size(), (float)p / (mPanelRenderer->getCurveResolution() - 1));
+		float step = 1.0f / (mPanelRenderer->getCurveResolution() - 1);
+		for (int p = 0; p < mPanelRenderer->getCurveResolution(); p++) {
+			glm::vec3 point = deCasteljau(mControlPointGeometry.verts, mControlPointGeometry.verts.size(), p * step);
 			mCurveGeometry.verts.emplace_back(point);
 			mCurveGeometry.cols.emplace_back(0.f, 0.f, 1.f);
 		}
 	}
 }
 
+// this de Casteljau algorithm is referenced from the Course Notes on D2L
 glm::vec3 CurveControl::deCasteljau(std::vector<glm::vec3> points, size_t d, float u) {
 	for (size_t i = 1; i < d; i++) {
 		for (int j = 0; j < d - i; j++) {
@@ -401,6 +412,16 @@ glm::vec3 CurveControl::deCasteljau(std::vector<glm::vec3> points, size_t d, flo
 }
 
 void CurveControl::GenerateBSplineCurve() {
+	mCurveGeometry.verts.clear();
+	mCurveGeometry.cols.clear();
+}
+
+void CurveControl::GenerateSurfaceOfRevolution() {
+	mCurveGeometry.verts.clear();
+	mCurveGeometry.cols.clear();
+}
+
+void CurveControl::GenerateTensorProduct() {
 	mCurveGeometry.verts.clear();
 	mCurveGeometry.cols.clear();
 }
@@ -416,16 +437,44 @@ void CurveControl::Update() {
 		UpdateViewMode();
 	}
 
-	mGPUGeometry.setVerts(mControlPointGeometry.verts);
-	mGPUGeometry.setCols(mControlPointGeometry.cols);
-	mPointGPUGeometry.setVerts(mControlPointGeometry.verts);
-	mPointGPUGeometry.setCols(
-		std::vector<glm::vec3>(mControlPointGeometry.verts.size(), { 1.f, 0.f, 0.f }));
+	switch (mPanelRenderer->viewMode()) {
+		case 0:
+			mGPUGeometry.setVerts(mControlPointGeometry.verts);
+			mGPUGeometry.setCols(mControlPointGeometry.cols);
+			mPointGPUGeometry.setVerts(mControlPointGeometry.verts);
+			mPointGPUGeometry.setCols(
+				std::vector<glm::vec3>(mControlPointGeometry.verts.size(), { 1.f, 0.f, 0.f }));
+			mPanelRenderer->isBezierMode() ? GenerateBezierCurve() : GenerateBSplineCurve();
+			mCurveGPUGeometry.setVerts(mCurveGeometry.verts);
+			mCurveGPUGeometry.setCols(mCurveGeometry.cols);
+			break;
+		case 1:
+			mGPUGeometry.setVerts(mControlPointGeometry.verts);
+			mGPUGeometry.setCols(mControlPointGeometry.cols);
+			mPointGPUGeometry.setVerts(mControlPointGeometry.verts);
+			mPointGPUGeometry.setCols(
+				std::vector<glm::vec3>(mControlPointGeometry.verts.size(), { 1.f, 0.f, 0.f }));
+			mPanelRenderer->isBezierMode() ? GenerateBezierCurve() : GenerateBSplineCurve();
+			mCurveGPUGeometry.setVerts(mCurveGeometry.verts);
+			mCurveGPUGeometry.setCols(mCurveGeometry.cols);
+			break;
+		case 2:
+			GenerateBSplineCurve();
+			GenerateSurfaceOfRevolution();
+			break;
+		case 3:
+			break;
+	}
+	// mGPUGeometry.setVerts(mControlPointGeometry.verts);
+	// mGPUGeometry.setCols(mControlPointGeometry.cols);
+	// mPointGPUGeometry.setVerts(mControlPointGeometry.verts);
+	// mPointGPUGeometry.setCols(
+	// 	std::vector<glm::vec3>(mControlPointGeometry.verts.size(), { 1.f, 0.f, 0.f }));
 
-	// set the bezier/b-spline curve geometry based on the current mode
-	mPanelRenderer->isBezierMode() ? GenerateBezierCurve() : GenerateBSplineCurve();
-	mCurveGPUGeometry.setVerts(mCurveGeometry.verts);
-	mCurveGPUGeometry.setCols(mCurveGeometry.cols);
+	// // set the bezier/b-spline curve geometry based on the current mode
+	// mPanelRenderer->isBezierMode() ? GenerateBezierCurve() : GenerateBSplineCurve();
+	// mCurveGPUGeometry.setVerts(mCurveGeometry.verts);
+	// mCurveGPUGeometry.setCols(mCurveGeometry.cols);
 }
 
 // Generate some initial points to show what the rendering system is doing at
