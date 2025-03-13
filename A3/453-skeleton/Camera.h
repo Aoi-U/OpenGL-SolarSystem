@@ -6,7 +6,7 @@
 class Camera
 {
 public:
-    Camera(Window& window);
+    Camera(int width = 800, int height = 800);
 
     void Move(const float& dTheta, const float& dPhi); // pans the camera about the origin
     void Zoom(const float& zoom); // zooms the camera towards/away from the origin
@@ -21,10 +21,12 @@ private:
     static constexpr float defaultTheta = 45.0f; // default angle in the xz plane
     static constexpr float defaultPhi = 45.0f; // default angle in the xy plane
 
-    Window& window;
     glm::mat4 proj; // projection matrix
     glm::mat4 view; // view matrix
     glm::mat4 model; // model matrix
+
+    int width = 800; // width of the window
+    int height = 800; // height of the window
 
     float radius; // distance from the origin
     float phi; // angle in the xz plane

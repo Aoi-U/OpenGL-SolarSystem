@@ -182,7 +182,8 @@ private:
 
 CurveControl::CurveControl(Window& window)
 	: mShader("shaders/test.vert", "shaders/test.frag"),
-	mPanel(window.getGLFWwindow()), window(window), camera(window) {
+	mPanel(window.getGLFWwindow()), window(window) {
+	camera = Camera(window.getWidth(), window.getHeight());
 	mCurveControls = std::make_shared<CurveEditorCallBack>();
 	m3DCameraControls = std::make_shared<TurnTable3DViewerCallBack>();
 

@@ -1,12 +1,11 @@
 #include "Camera.h"
 #include <iostream>
 
-Camera::Camera(Window& window) 
-    : window(window), model(glm::mat4(1.0f)), view(glm::mat4(1.0f)), proj(glm::mat4(1.0f))
+Camera::Camera(int width, int height) 
+    : model(glm::mat4(1.0f)), view(glm::mat4(1.0f)), proj(glm::mat4(1.0f))
 {
-    int width = window.getWidth();
-    int height = window.getHeight();
-
+    this->width = width;
+    this->height = height;
     // set initial position of the camera
     radius = defaultRadius;
     theta = defaultTheta;
