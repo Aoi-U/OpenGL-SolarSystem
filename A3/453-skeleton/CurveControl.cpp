@@ -393,12 +393,15 @@ void CurveControl::GenerateBezierCurve() {
 		// generates a bezier curve from the control points
 		mCurveGeometry.verts.clear();
 		mCurveGeometry.cols.clear();
-		float step = 1.0f / (mPanelRenderer->getCurveResolution() - 1);
-		for (int p = 0; p < mPanelRenderer->getCurveResolution(); p++) {
-			glm::vec3 point = deCasteljau(mControlPointGeometry.verts, mControlPointGeometry.verts.size(), p * step);
+		float step = 1.0f / mPanelRenderer->getCurveResolution();
+		for (float u = 0; u <= 1; u += step) {
+			glm::vec3 point = deCasteljau(mControlPointGeometry.verts, mControlPointGeometry.verts.size(), u);
 			mCurveGeometry.verts.emplace_back(point);
 			mCurveGeometry.cols.emplace_back(0.f, 0.f, 1.f);
 		}
+		glm::vec3 point = deCasteljau(mControlPointGeometry.verts, mControlPointGeometry.verts.size(), 1);
+		mCurveGeometry.verts.emplace_back(point);
+		mCurveGeometry.cols.emplace_back(0.f, 0.f, 1.f);
 	}
 }
 
