@@ -36,7 +36,7 @@ void Camera::Move(const float& dTheta, const float& dPhi) {
 }
 
 void Camera::Zoom(const float& zoom) {
-    radius += zoom; // update the radius by the zoom value
+    radius -= zoom; // update the radius by the zoom value
 
     // clamps the radius between 10e-6 and 100 to prevent flipping
     if (radius < 10e-6) {
