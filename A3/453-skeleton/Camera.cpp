@@ -65,6 +65,17 @@ void Camera::Reset() {
     UpdateView();
 }
 
+void Camera::TogglePerspectiveMode() {
+	// toggle between perspective and orthographic mode
+	isPerspective = !isPerspective;
+	if (isPerspective) {
+		proj = glm::perspective(glm::radians(45.0f), (float)(width / height), 0.1f, 100.0f);
+	}
+	else {
+		proj = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.1f, 100.0f);
+	}
+}
+
 glm::mat4 Camera::getModel() { return model; }
 
 glm::mat4 Camera::getProj() { return proj; }

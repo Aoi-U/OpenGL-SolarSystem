@@ -11,6 +11,7 @@ public:
     void Move(const float& dTheta, const float& dPhi); // pans the camera about the origin
     void Zoom(const float& zoom); // zooms the camera towards/away from the origin
     void Reset(); // resets the camera to its initial position
+		void TogglePerspectiveMode(); // toggles between perspective and orthographic mode
     glm::mat4 getModel(); // returns the model matrix
     glm::mat4 getView(); // returns the view matrix
     glm::mat4 getProj(); // returns the projection matrix
@@ -31,6 +32,8 @@ private:
     float radius; // distance from the origin
     float phi; // angle in the xz plane
     float theta; // angle in the xy plane
+
+		bool isPerspective = true; // perspective mode
 
     void UpdateView(); // updates the view matrix based on the current radius, phi, and theta
 };
