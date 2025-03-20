@@ -93,7 +93,7 @@ public:
 class CurveEditorPanelRenderer : public PanelRendererInterface {
 public:
 	CurveEditorPanelRenderer()
-		: reset(false), bezierMode(true), solidMode(true), pointSize(5.0f), curveRes(10), checkboxValue(false), comboSelection(0) {
+		: reset(false), bezierMode(true), solidMode(true), perspectiveMode(true), pointSize(5.0f), curveRes(10), checkboxValue(false), comboSelection(0) {
 		// Initialize options for the combo box
 		options[0] = "2D Editor";
 		options[1] = "3D View";
@@ -126,13 +126,22 @@ public:
 			IM_ARRAYSIZE(options));
 		ImGui::Text("Selected: %s", options[comboSelection]);
 
+		// check if the current mode is not 2d (i.e. it is in any 3d view mode)
+		if (comboSelection != 1) {
+			if (ImGui::Button(perspectiveMode ? "Switch to Orthographic" : "Switch to Perspective")) {
+				perspectiveMode = !perspectiveMode;
+			}
+		}
+
+		// check if the current mode is surface of revolution or tensor product
 		if (comboSelection == 2 || comboSelection == 3) {
 			// change between wireframe and solid mode
 			if (ImGui::Button(solidMode ? "Switch to Wireframe Mode" : "Switch to solid mode")) {
 				solidMode = !solidMode;
 			}
 		}
-		
+
+		// check if the current mode is the editor or regular 3d view
 		if (comboSelection == 0 || comboSelection == 1) {
 			// change curve modes
 			if (ImGui::Button(bezierMode ? "Switch to B-Spline mode" : "Switch to Bezier mode")) {
@@ -167,6 +176,7 @@ public:
 	bool isReset() const { return reset; }
 	bool isBezierMode() const { return bezierMode; }
 	bool isSolidMode() const { return solidMode; }
+	bool isPerspectiveMode() const { return perspectiveMode; }
 
 private:
 	float colorValue[3];    // Array for RGB color values
@@ -176,6 +186,7 @@ private:
 	bool reset;			 	// resets the editor/view depending on the mode
 	bool bezierMode;		// change between bezier and b-spline mode
 	bool solidMode;			// change between wireframe and solid mode
+	bool perspectiveMode; // change between perspective and orthographic mode
 	int comboSelection;     // Index of selected option in combo box
 	const char* options[4]; // Options for the combo box
 };
@@ -239,18 +250,28 @@ void CurveControl::DrawGeometry() {
 
 
 	// Render the control points
-	glPointSize(mPanelRenderer->getPointSize());
-	mGPUGeometry.bind();
-	glDrawArrays(GL_POINTS, 0, (int)mControlPointGeometry.verts.size());
+	int mode = mPanelRenderer->viewMode();
+	if (mode == 0 || mode == 1) {
+		// render the control points
+		glPointSize(mPanelRenderer->getPointSize());
+		mGPUGeometry.bind();
+		glDrawArrays(GL_POINTS, 0, (int)mControlPointGeometry.verts.size());
 	
-	// Render the line that connects the control points
-	mPointGPUGeometry.bind();
-	glDrawArrays(GL_LINE_STRIP, 0, (int)mControlPointGeometry.verts.size());
-	
-	// render the bezier/b-spline curve
-	mCurveGPUGeometry.bind();
-	glDrawArrays(GL_LINE_STRIP, 0, (int)mCurveGeometry.verts.size());
-	
+		// Render the line that connects the control points
+		mPointGPUGeometry.bind();
+		glDrawArrays(GL_LINE_STRIP, 0, (int)mControlPointGeometry.verts.size());
+		// render the bezier/b-spline curve
+		mCurveGPUGeometry.bind();
+		glDrawArrays(GL_LINE_STRIP, 0, (int)mCurveGeometry.verts.size());
+	}
+	else if (mode == 2) {
+		// render the surface of revolution
+		mRevolutionGPUGeometry.bind();
+		glDrawArrays(GL_TRIANGLES, 0, (int)mRevolutionGeometry.verts.size());
+	}
+	else {
+		// 
+	}
 	
 	// disable sRGB for things like imgui
 	glDisable(GL_FRAMEBUFFER_SRGB);
@@ -421,8 +442,55 @@ void CurveControl::GenerateBSplineCurve() {
 }
 
 void CurveControl::GenerateSurfaceOfRevolution() {
-	mCurveGeometry.verts.clear();
-	mCurveGeometry.cols.clear();
+	mRevolutionGeometry.verts.clear();
+	mRevolutionGeometry.cols.clear();
+
+	// stores a vector of sample points 
+	std::vector<std::vector<glm::vec3>> points;
+
+	// generate a surface of revolution from the sample points
+	float step = glm::two_pi<float>() / mPanelRenderer->getCurveResolution(); // number of sections defined by user
+	
+	for (float u = 0; u < glm::two_pi<float>(); u += step) {
+		// generates sample points for section u of the revolution
+		std::vector<glm::vec3> curveSection; 
+		for (auto point : mCurveGeometry.verts) {
+			curveSection.emplace_back(point.x * glm::cos(u), point.y, point.x * glm::sin(u));
+		}
+		points.push_back(curveSection); 
+	}
+
+	// floating point may pass 2pi so guarentee a section at 2pi
+	std::vector<glm::vec3> endSection;
+	for (auto point : mCurveGeometry.verts) {
+		endSection.emplace_back(point.x * glm::cos(glm::two_pi<float>()), point.y, point.x * glm::sin(glm::two_pi<float>()));
+	}
+	points.push_back(endSection);
+
+	// triangulate each section and add it to the VBO
+	for (size_t i = 0; i < points.size() - 1; i++) {
+		for (size_t j = 0; j < points[i].size() - 1; j++) {
+			glm::vec3 pOne = points[i][j];
+			glm::vec3 pTwo = points[i + 1][j];
+			glm::vec3 pThree = points[i][j + 1];
+			glm::vec3 pFour = points[i + 1][j + 1];
+
+			mRevolutionGeometry.verts.push_back(pOne);
+			mRevolutionGeometry.verts.push_back(pTwo);
+			mRevolutionGeometry.verts.push_back(pThree);
+			mRevolutionGeometry.cols.emplace_back(0.f, 1.f, 1.f);
+			mRevolutionGeometry.cols.emplace_back(0.f, 1.f, 1.f);
+			mRevolutionGeometry.cols.emplace_back(0.f, 1.f, 1.f);
+
+
+			mRevolutionGeometry.verts.push_back(pTwo);
+			mRevolutionGeometry.verts.push_back(pThree);
+			mRevolutionGeometry.verts.push_back(pFour);
+			mRevolutionGeometry.cols.emplace_back(0.f, 1.f, 1.f);
+			mRevolutionGeometry.cols.emplace_back(0.f, 1.f, 1.f);
+			mRevolutionGeometry.cols.emplace_back(0.f, 1.f, 1.f);
+		}
+	}
 }
 
 void CurveControl::GenerateTensorProduct() {
@@ -463,8 +531,20 @@ void CurveControl::Update() {
 			mCurveGPUGeometry.setCols(mCurveGeometry.cols);
 			break;
 		case 2:
-			GenerateBSplineCurve();
+			//GenerateBSplineCurve();
+			GenerateBezierCurve();
 			GenerateSurfaceOfRevolution();
+
+			mRevolutionGPUGeometry.setVerts(mRevolutionGeometry.verts);
+			mRevolutionGPUGeometry.setCols(mRevolutionGeometry.cols);
+
+			glPolygonMode(GL_FRONT_AND_BACK, mPanelRenderer->isSolidMode() ? GL_FILL : GL_LINE);
+
+			if (mPanelRenderer->isPerspectiveMode() != perspectiveMode) {
+				perspectiveMode = mPanelRenderer->isPerspectiveMode();
+				camera.TogglePerspectiveMode();
+			}
+
 			break;
 		case 3:
 			break;
@@ -479,6 +559,7 @@ void CurveControl::Update() {
 	// mPanelRenderer->isBezierMode() ? GenerateBezierCurve() : GenerateBSplineCurve();
 	// mCurveGPUGeometry.setVerts(mCurveGeometry.verts);
 	// mCurveGPUGeometry.setCols(mCurveGeometry.cols);
+
 }
 
 // Generate some initial points to show what the rendering system is doing at
@@ -487,7 +568,7 @@ CPU_Geometry CurveControl::GenerateInitialGeometry() {
 	std::vector<glm::vec3> cp_positions_vector = {
 	  {-.5f, -.5f, 0.f}, {.5f, -.5f, 0.f}, {.5f, .5f, 0.f}, {-.5f, .5f, 0.f} };
 	glm::vec3 cp_line_colour = { 0.f, 1.f, 0.f };
-
+	
 	CPU_Geometry cp_point_cpu;
 	cp_point_cpu.verts = cp_positions_vector;
 	cp_point_cpu.cols =

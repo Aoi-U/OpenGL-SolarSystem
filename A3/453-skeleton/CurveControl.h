@@ -39,17 +39,21 @@ private:
   float xStart, yStart; // tracks the current x and y position of the mouse
   float yOffsetStart = 0; // tracks the current y offset of the scroll wheel
 
+	bool perspectiveMode = true; // perspective mode
+
   // Geometry
   CPU_Geometry mControlPointGeometry; // CPU geometry for control points
   CPU_Geometry mCurveGeometry; // CPU geometry for the bezier/b-spline curve
+  CPU_Geometry mRevolutionGeometry; // CPU geometry for the surface of revolution
   GPU_Geometry mGPUGeometry; // GPU geometry for control points
   GPU_Geometry mPointGPUGeometry; // GPU geometry for lines connecting control points
   GPU_Geometry mCurveGPUGeometry; // GPU geometry for the bezier/b-spline curve
+	GPU_Geometry mRevolutionGPUGeometry; // GPU geometry for the surface of revolution
 
   // Private functions
   CPU_Geometry GenerateInitialGeometry();
   void GenerateBezierCurve(); // generates a bezier curve from user created control points
-  void  GenerateBSplineCurve(); // generates a quadratic b-spline curve from user created control points
+  void GenerateBSplineCurve(); // generates a quadratic b-spline curve from user created control points
   void GenerateSurfaceOfRevolution(); // generates a surface of revolution from the control points
   void GenerateTensorProduct(); // generates a tensor product surface 
   glm::vec3 deCasteljau(std::vector<glm::vec3> points, size_t d, float u); // de Casteljau algorithm for bezier curve
