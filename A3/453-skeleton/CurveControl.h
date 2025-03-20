@@ -37,7 +37,6 @@ private:
   bool mouseOnPoint = false; // tracks if the mouse is on a control point
   bool mouseDragging = false; // tracks if the mouse is being dragged
   float xStart, yStart; // tracks the current x and y position of the mouse
-  float yOffsetStart = 0; // tracks the current y offset of the scroll wheel
 
 	bool perspectiveMode = true; // perspective mode
 
@@ -56,7 +55,8 @@ private:
   void GenerateBSplineCurve(); // generates a quadratic b-spline curve from user created control points
   void GenerateSurfaceOfRevolution(); // generates a surface of revolution from the control points
   void GenerateTensorProduct(); // generates a tensor product surface 
-  glm::vec3 deCasteljau(std::vector<glm::vec3> points, size_t d, float u); // de Casteljau algorithm for bezier curve
+  glm::vec3 deCasteljau(std::vector<glm::vec3> points, size_t d, float u); // de Casteljau algorithm for bezier curve taken from the lecture
+  std::vector<glm::vec3> subDivision(std::vector<glm::vec3> points, size_t d, float u); // subdivision algorithm for b-spline curve taken from the lecture
 
   void DragPoint(); // drags a control point based on the mouse position
   void CreatePoint(); // creates a control point at the clicked position

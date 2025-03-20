@@ -78,6 +78,7 @@ public:
 	}
 	virtual void scrollCallback(double xoffset, double yoffset) {
 		this->yoffset = (float)yoffset;
+		scrolling = true;
 	}
 	virtual void windowSizeCallback(int width, int height) {
 
@@ -88,6 +89,7 @@ public:
 	float xpos = 0, ypos = 0; // mouse position
 	float yoffset = 0; // scroll wheel movement
 	bool wasClicked = false; // mouse click
+	bool scrolling = false; // scroll wheel movement
 };
 
 class CurveEditorPanelRenderer : public PanelRendererInterface {
@@ -400,10 +402,10 @@ void CurveControl::UpdateViewMode() {
 			xStart = xEnd;
 			yStart = yEnd;
 		}
-	} else if (m3DCameraControls->yoffset != yOffsetStart) {
+	} else if (m3DCameraControls->scrolling) {
 		// zoom the camera based on the scroll wheel movement
 		camera.Zoom(m3DCameraControls->yoffset);
-		yOffsetStart = m3DCameraControls->yoffset;
+		m3DCameraControls->scrolling = false;
 	} else {
 		mouseDragging = false;
 	}
@@ -440,6 +442,10 @@ void CurveControl::GenerateBSplineCurve() {
 	mCurveGeometry.verts.clear();
 	mCurveGeometry.cols.clear();
 }
+
+// std::vector<glm::vec3> subDivision(std::vector<glm::vec3> points, size_t d, float u) {
+
+// }
 
 void CurveControl::GenerateSurfaceOfRevolution() {
 	mRevolutionGeometry.verts.clear();
