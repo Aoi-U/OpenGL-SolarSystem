@@ -1,7 +1,7 @@
 # CPSC 453 Assignment 3
 Aoi Ueki 30179305
 
-Controls:
+Controls:  
 Adding points: Left click on some empty space in the window  
 Dragging points: Hold left click on a point and drag it  
 Deleting points: Hold SPACE and left click on a point  
