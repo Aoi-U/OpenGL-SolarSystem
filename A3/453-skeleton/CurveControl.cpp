@@ -103,6 +103,9 @@ public:
 	}
 
 	virtual void render() override {
+		// show fps
+		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
 		// Color selector
 		ImGui::ColorEdit3("Select Background Color",
 			colorValue); // RGB color selector
