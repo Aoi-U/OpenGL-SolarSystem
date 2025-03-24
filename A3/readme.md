@@ -16,5 +16,5 @@ Compiler: Microsoft (R) C/C++ Optimizing Compiler Version 19.43.34809 for x86
 
 Running the program:
 Navigate to the root folder then in the terminal `mkdir build` `cd build` `cmake ..` `cmake --build .` `./Debug/453-skeleton.exe`.  
-Note: If running this program on the CPSC lab machines, building the program may create the PirateShipGame.exe on the root build folder instead of inside the Debug folder.  
+Note: If running this program on the CPSC lab machines, building the program may create the 453-skeleton.exe on the root build folder instead of inside the Debug folder.  
 In that case, type `./453-skeleton.exe` instead of `./Debug/453-skeleton.exe`

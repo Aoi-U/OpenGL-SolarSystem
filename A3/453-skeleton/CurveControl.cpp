@@ -16,8 +16,6 @@ public:
 	CurveEditorCallBack() {}
 
 	virtual void keyCallback(int key, int scancode, int action, int mods) override {
-		Log::info("KeyCallback: key={}, action={}", key, action);
-
 		if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
 			deleteMode = true;
 		}
@@ -27,8 +25,6 @@ public:
 	}
 
 	virtual void mouseButtonCallback(int button, int action, int mods) override {
-		Log::info("MouseButtonCallback: button={}, action={}", button, action);
-
 		if (button == GLFW_MOUSE_BUTTON_1 && action == GLFW_PRESS) {
 			wasClicked = true;
 		}
@@ -38,18 +34,13 @@ public:
 	}
 
 	virtual void cursorPosCallback(double xpos, double ypos) override {
-		Log::info("CursorPosCallback: xpos={}, ypos={}", xpos, ypos);
 		this->xpos = xpos;
 		this->ypos = ypos;
 	}
 
-	virtual void scrollCallback(double xoffset, double yoffset) override {
-		Log::info("ScrollCallback: xoffset={}, yoffset={}", xoffset, yoffset);
-	}
+	virtual void scrollCallback(double xoffset, double yoffset) override { }
 
 	virtual void windowSizeCallback(int width, int height) override {
-		Log::info("WindowSizeCallback: width={}, height={}", width, height);
-
 		// **Important**, calls glViewport(0, 0, width, height);
 		CallbackInterface::windowSizeCallback(width, height);
 	}
