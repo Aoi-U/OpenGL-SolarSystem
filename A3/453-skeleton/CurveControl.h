@@ -15,7 +15,7 @@ class TurnTable3DViewerCallBack;
 
 class CurveEditorPanelRenderer;
 
-enum class ViewOption { CurveEditor, SurfaceOfRevolution, TensorSurface };
+enum class ViewOption { CurveEditor, View, SurfaceOfRevolution, TensorSurface };
 
 class CurveControl {
 public:
@@ -26,7 +26,6 @@ public:
 
 private:
 	// State variables
-	ViewOption mCurrentViewOption = ViewOption::CurveEditor;
 	std::shared_ptr<CurveEditorCallBack> mCurveControls;
 	std::shared_ptr<TurnTable3DViewerCallBack> m3DCameraControls;
 	ShaderProgram mShader;
@@ -38,25 +37,20 @@ private:
 	size_t pointIndex = -1; // index of the control point that is being dragged
 	bool mouseOnPoint = false; // tracks if the mouse is on a control point
 	bool mouseDragging = false; // tracks if the mouse is being dragged
-	float xStart, yStart; // tracks the current x and y position of the mouse
-
 	bool perspectiveMode = true; // perspective mode
+	float xStart, yStart; // tracks the current x and y position of the mouse
 
 	// Geometry
 	CPU_Geometry mControlPointGeometry; // CPU geometry for control points
 	CPU_Geometry mCurveGeometry; // CPU geometry for the bezier/b-spline curve
 	CPU_Geometry mRevolutionGeometry; // CPU geometry for the surface of revolution
+
 	GPU_Geometry mGPUGeometry; // GPU geometry for control points
-	GPU_Geometry mPointGPUGeometry; // GPU geometry for lines connecting control points
 	GPU_Geometry mCurveGPUGeometry; // GPU geometry for the bezier/b-spline curve
 	GPU_Geometry mRevolutionGPUGeometry; // GPU geometry for the surface of revolution
 
 	// Private functions
 	CPU_Geometry GenerateInitialGeometry();
-	//void GenerateBezierCurve(); // generates a bezier curve from user created control points
-	//void GenerateBSplineCurve(); // generates a quadratic b-spline curve from user created control points
-	//void GenerateSurfaceOfRevolution(); // generates a surface of revolution from the control points
-	//glm::vec3 deCasteljau(std::vector<glm::vec3> points, size_t d, float u); // de Casteljau algorithm for bezier curve taken from the lecture
 
 	void DragPoint(); // drags a control point based on the mouse position
 	void CreatePoint(); // creates a control point at the clicked position

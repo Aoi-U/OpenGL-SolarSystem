@@ -98,7 +98,7 @@ public:
 class CurveEditorPanelRenderer : public PanelRendererInterface {
 public:
 	CurveEditorPanelRenderer()
-		: reset(false), bezierMode(true), solidMode(true), perspectiveMode(true), pointSize(5.0f), curveRes(10), checkboxValue(false), comboSelection(0) {
+		: reset(false), bezierMode(true), solidMode(true), perspectiveMode(true), pointSize(10.0f), curveRes(10), checkboxValue(false), comboSelection(0) {
 		// Initialize options for the combo box
 		options[0] = "2D Editor";
 		options[1] = "3D View";
@@ -154,10 +154,6 @@ public:
 			"Point Size: %.3f");
 
 		ImGui::SliderInt("Curve Resolution", &curveRes, 0, 100, "Curve Resolution: %d");
-		// Checkbox
-		ImGui::Checkbox("Enable Feature", &checkboxValue);
-		ImGui::Text("Feature Enabled: %s", checkboxValue ? "Yes" : "No");
-
 
 		// Displaying current values
 		ImGui::Text("Point Size: %.3f", pointSize);
@@ -171,7 +167,20 @@ public:
 	int getCurveResolution() const { return curveRes; }
 	bool isEditorMode() const { return comboSelection == 0; }
 	bool isTensorMode() const { return comboSelection == 3; }
-	int viewMode() const { return comboSelection; }
+	ViewOption viewMode() const {
+		switch (comboSelection) {
+		case 0:
+			return ViewOption::CurveEditor;
+		case 1:
+			return ViewOption::View;
+		case 2:
+			return ViewOption::SurfaceOfRevolution;
+		case 3:
+			return ViewOption::TensorSurface;
+		default:
+			return ViewOption::CurveEditor;
+		}
+	}
 	bool isReset() const { return reset; }
 	bool isBezierMode() const { return bezierMode; }
 	bool isSolidMode() const { return solidMode; }
@@ -211,13 +220,10 @@ CurveControl::CurveControl(Window& window)
 	mGPUGeometry.setVerts(mControlPointGeometry.verts);
 	mGPUGeometry.setCols(mControlPointGeometry.cols);
 
-	// Using two different buffers for the control points and the lines themselves
-	// makes it easier to highlight the selected point
-	mPointGPUGeometry.setVerts(mControlPointGeometry.verts);
-	mPointGPUGeometry.setCols(
-		std::vector<glm::vec3>(mControlPointGeometry.verts.size(), { 1.f, 0.f, 0.f }));
+	// generate the bezier curve
+	curveGenerator.GenerateBezierCurve(mControlPointGeometry, mCurveGeometry, 1.0f / mPanelRenderer->getCurveResolution());
 
-	curveGenerator.GenerateBezierCurve(mControlPointGeometry, mCurveGeometry, 1.0 / mPanelRenderer->getCurveResolution());
+	// set the geometry for the bezier curve
 	mCurveGPUGeometry.setVerts(mCurveGeometry.verts);
 	mCurveGPUGeometry.setCols(mCurveGeometry.cols);
 
@@ -240,6 +246,7 @@ void CurveControl::DrawGeometry() {
 	GLint editorLoc = glGetUniformLocation(mShader, "editor");
 	glUniform1i(editorLoc, mPanelRenderer->isEditorMode());
 
+	// set up the model, view, and projection matrices
 	GLint modelLoc = glGetUniformLocation(mShader, "model");
 	GLint viewLoc = glGetUniformLocation(mShader, "view");
 	GLint projLoc = glGetUniformLocation(mShader, "proj");
@@ -250,26 +257,27 @@ void CurveControl::DrawGeometry() {
 
 
 	// Render the control points
-	int mode = mPanelRenderer->viewMode();
-	if (mode == 0 || mode == 1) {
+	ViewOption mode = mPanelRenderer->viewMode();
+	if (mode == ViewOption::CurveEditor || mode == ViewOption::View) { 
 		// render the control points
 		glPointSize(mPanelRenderer->getPointSize());
 		mGPUGeometry.bind();
 		glDrawArrays(GL_POINTS, 0, (int)mControlPointGeometry.verts.size());
 
-		// Render the line that connects the control points
-		mPointGPUGeometry.bind();
-		glDrawArrays(GL_LINE_STRIP, 0, (int)mControlPointGeometry.verts.size());
 		// render the bezier/b-spline curve
 		mCurveGPUGeometry.bind();
 		glDrawArrays(GL_LINE_STRIP, 0, (int)mCurveGeometry.verts.size());
 	}
-	else if (mode == 2) {
+	else if (mode == ViewOption::SurfaceOfRevolution) {
 		// render the surface of revolution
 		mRevolutionGPUGeometry.bind();
 		glDrawArrays(GL_TRIANGLES, 0, (int)mRevolutionGeometry.verts.size());
+
+		// set the polygon mode to wireframe or solid
+		glPolygonMode(GL_FRONT_AND_BACK, mPanelRenderer->isSolidMode() ? GL_FILL : GL_LINE);
+
 	}
-	else {
+	else { // mode is tensor product surface (NOT IMPLEMENTED)
 		// 
 	}
 
@@ -419,6 +427,8 @@ void CurveControl::UpdateViewMode() {
 void CurveControl::Update() {
 	// Use this function to process logic and update things based on user inputs
 	//Example: generate a new control point
+
+	// set the callbacks based on 2d or 3d mode
 	if (mPanelRenderer->isEditorMode()) {
 		window.setCallbacks(mCurveControls);
 		UpdateEditorMode();
@@ -429,49 +439,53 @@ void CurveControl::Update() {
 	}
 
 	switch (mPanelRenderer->viewMode()) {
-	case 0:
+	case ViewOption::CurveEditor: // 2D editor
+		// set geometry for the control points
 		mGPUGeometry.setVerts(mControlPointGeometry.verts);
 		mGPUGeometry.setCols(mControlPointGeometry.cols);
-		mPointGPUGeometry.setVerts(mControlPointGeometry.verts);
-		mPointGPUGeometry.setCols(
-			std::vector<glm::vec3>(mControlPointGeometry.verts.size(), { 1.f, 0.f, 0.f }));
-		mPanelRenderer->isBezierMode() ?
-			curveGenerator.GenerateBezierCurve(mControlPointGeometry, mCurveGeometry, 1.0 / mPanelRenderer->getCurveResolution())
-			: curveGenerator.GenerateBSplineCurve(mCurveGeometry);
-		mCurveGPUGeometry.setVerts(mCurveGeometry.verts);
-		mCurveGPUGeometry.setCols(mCurveGeometry.cols);
-		break;
-	case 1:
-		mGPUGeometry.setVerts(mControlPointGeometry.verts);
-		mGPUGeometry.setCols(mControlPointGeometry.cols);
-		mPointGPUGeometry.setVerts(mControlPointGeometry.verts);
-		mPointGPUGeometry.setCols(
-			std::vector<glm::vec3>(mControlPointGeometry.verts.size(), { 1.f, 0.f, 0.f }));
+
+		// generate the bezier/b-spline curve
 		mPanelRenderer->isBezierMode() ?
 			curveGenerator.GenerateBezierCurve(mControlPointGeometry, mCurveGeometry, 1.0f / mPanelRenderer->getCurveResolution())
-			: curveGenerator.GenerateBSplineCurve(mCurveGeometry);
+			: curveGenerator.GenerateBSplineCurve(mControlPointGeometry, mCurveGeometry);
+
+		// set geometry for the bezier/b-spline curve
 		mCurveGPUGeometry.setVerts(mCurveGeometry.verts);
 		mCurveGPUGeometry.setCols(mCurveGeometry.cols);
 		break;
-	case 2:
-		//GenerateBSplineCurve();
+	case ViewOption::View: // 3D view
+		// set geometry for the control points
+		mGPUGeometry.setVerts(mControlPointGeometry.verts);
+		mGPUGeometry.setCols(mControlPointGeometry.cols);
 
-		// TEMP generate bezier curve
-		curveGenerator.GenerateBezierCurve(mControlPointGeometry, mCurveGeometry, 1.0f / mPanelRenderer->getCurveResolution());
+		// generate the bezier/b-spline curve
+		mPanelRenderer->isBezierMode() ?
+			curveGenerator.GenerateBezierCurve(mControlPointGeometry, mCurveGeometry, 1.0f / mPanelRenderer->getCurveResolution())
+			: curveGenerator.GenerateBSplineCurve(mControlPointGeometry, mCurveGeometry);
+
+		// set geometry for the bezier/b-spline curve	
+		mCurveGPUGeometry.setVerts(mCurveGeometry.verts);
+		mCurveGPUGeometry.setCols(mCurveGeometry.cols);
+		break;
+	case ViewOption::SurfaceOfRevolution: // 3D surface of revolution
+		// generate the b-spline curve
+		curveGenerator.GenerateBSplineCurve(mControlPointGeometry, mCurveGeometry);
+
+		// generate the surface of revolution
 		curveGenerator.GenerateSurfaceOfRevolution(mCurveGeometry, mRevolutionGeometry, glm::two_pi<float>() / mPanelRenderer->getCurveResolution());
 
+		// set geometry for the surface of revolution
 		mRevolutionGPUGeometry.setVerts(mRevolutionGeometry.verts);
 		mRevolutionGPUGeometry.setCols(mRevolutionGeometry.cols);
 
-		glPolygonMode(GL_FRONT_AND_BACK, mPanelRenderer->isSolidMode() ? GL_FILL : GL_LINE);
-
+		// set the camera to perspective or orthographic mode
 		if (mPanelRenderer->isPerspectiveMode() != perspectiveMode) {
 			perspectiveMode = mPanelRenderer->isPerspectiveMode();
 			camera.TogglePerspectiveMode();
 		}
 
 		break;
-	case 3:
+	case ViewOption::TensorSurface: // Tensor Product Surfaces (NOT IMPLEMENTED)
 		break;
 	}
 }

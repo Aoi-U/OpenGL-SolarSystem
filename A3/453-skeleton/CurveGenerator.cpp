@@ -19,7 +19,7 @@ void CurveGenerator::GenerateBezierCurve(const CPU_Geometry& points, CPU_Geometr
 	}
 }
 
-// de Casteljau algorithm referenced from the Course Notes on D2L
+// de Casteljau algorithm referenced from the lecture
 glm::vec3 CurveGenerator::deCasteljau(std::vector<glm::vec3> points, size_t d, float u) {
 	for (size_t i = 1; i < d; i++) {
 		for (int j = 0; j < d - i; j++) {
@@ -29,9 +29,39 @@ glm::vec3 CurveGenerator::deCasteljau(std::vector<glm::vec3> points, size_t d, f
 	return points[0];
 }
 
-void CurveGenerator::GenerateBSplineCurve(CPU_Geometry& curve) {
+void CurveGenerator::GenerateBSplineCurve(const CPU_Geometry& points, CPU_Geometry& curve) {
+	// generates a quadratic b-spline curve from the control points
 	curve.verts.clear();
 	curve.cols.clear();
+
+	// run chaikins algorithm on the control points
+	if (points.verts.size() > 1) {
+		std::vector<glm::vec3> newPoints = points.verts;
+
+		// run chaikins algorithm 4 times for a sufficiently smooth curve
+		for (int i = 0; i < 4; i++) {
+			newPoints = chaikin(newPoints);
+		}
+		// add the new points to the curve
+		curve.verts = newPoints;
+		curve.cols = std::vector<glm::vec3>(newPoints.size(), glm::vec3(0.f, 0.f, 1.f));
+	}
+}
+
+// chaikin's algorithm referenced from the lecture 
+std::vector<glm::vec3> CurveGenerator::chaikin(const std::vector<glm::vec3>& points) {
+	std::vector<glm::vec3> newPoints;
+
+	newPoints.push_back(points[0]);
+
+	for (size_t i = 0; i < points.size() - 1; i++) {
+		newPoints.push_back(0.75f * points[i] + 0.25f * points[i + 1]);
+		newPoints.push_back(0.25f * points[i] + 0.75f * points[i + 1]);
+	}
+
+	newPoints.push_back(points[points.size() - 1]);
+
+	return newPoints;
 }
 
 void CurveGenerator::GenerateSurfaceOfRevolution(const CPU_Geometry& curve, CPU_Geometry& revolution, float step) {

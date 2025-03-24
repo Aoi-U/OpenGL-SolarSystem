@@ -37,6 +37,8 @@ void Camera::Move(const float& dTheta, const float& dPhi) {
 }
 
 void Camera::Zoom(const float& zoom) {
+	if (!isPerspective) return; 
+
 	fov += zoom; // update the fov by the new delta value
 
 	// clamps the fov between 1 and 179 to prevent flipping
@@ -63,7 +65,7 @@ void Camera::TogglePerspectiveMode() {
 	// toggle between perspective and orthographic mode
 	isPerspective = !isPerspective;
 	if (isPerspective) {
-		proj = glm::perspective(glm::radians(45.0f), (float)(width / height), 0.1f, 100.0f);
+		proj = glm::perspective(glm::radians(fov), (float)(width / height), 0.1f, 100.0f);
 	}
 	else {
 		proj = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.1f, 100.0f);
