@@ -19,167 +19,174 @@
 
 SolarSystem::SolarSystem()
 {
-    mPath = AssetPath::Instance();
-    mTime = Time::Instance();
+	mPath = AssetPath::Instance();
+	mTime = Time::Instance();
 
-    glfwWindowHint(GLFW_SAMPLES, 32);
-    mWindow = std::make_unique<Window>(800, 800, "Solar system");
+	glfwWindowHint(GLFW_SAMPLES, 32);
+	mWindow = std::make_unique<Window>(800, 800, "Solar system");
 
-    // Standard ImGui/GLFW middleware
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGui::StyleColorsDark();
-    ImGui_ImplGlfw_InitForOpenGL(mWindow->getGLFWwindow(), true);
-    ImGui_ImplOpenGL3_Init("#version 330 core");
+	// Standard ImGui/GLFW middleware
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGui::StyleColorsDark();
+	ImGui_ImplGlfw_InitForOpenGL(mWindow->getGLFWwindow(), true);
+	ImGui_ImplOpenGL3_Init("#version 330 core");
 
-    glEnable(GL_MULTISAMPLE);
-    int samples = 0;
-    glGetIntegerv(GL_SAMPLES, &samples);
-    Log::info("MSAA Samples: {0}", samples);
+	glEnable(GL_MULTISAMPLE);
+	int samples = 0;
+	glGetIntegerv(GL_SAMPLES, &samples);
+	Log::info("MSAA Samples: {0}", samples);
 
-    GLDebug::enable(); // ON Submission you may comments this out to avoid unnecessary prints to the console
+	GLDebug::enable(); // ON Submission you may comments this out to avoid unnecessary prints to the console
 
-    mInputManager = std::make_shared<InputManager>(
-        [this](int const width, int const height)->void {OnResize(width, height);},
-        [this](double const xOffset, double const yOffset)->void {OnMouseWheelChange(xOffset, yOffset);}
-    );
+	mInputManager = std::make_shared<InputManager>(
+		[this](int const width, int const height)->void {OnResize(width, height); },
+		[this](double const xOffset, double const yOffset)->void {OnMouseWheelChange(xOffset, yOffset); }
+	);
 
-    mWindow->setCallbacks(mInputManager);
+	mWindow->setCallbacks(mInputManager);
 
-    PrepareUnitSphereGeometry();
+	PrepareUnitSphereGeometry();
 
-    mBasicShader = std::make_unique<ShaderProgram>(
-        mPath->Get("shaders/test.vert"),
-        mPath->Get("shaders/test.frag")
-    );
+	mBasicShader = std::make_unique<ShaderProgram>(
+		mPath->Get("shaders/test.vert"),
+		mPath->Get("shaders/test.frag")
+	);
 
-    mTurnTableCamera = std::make_unique<TurnTableCamera>();
+	mTurnTableCamera = std::make_unique<TurnTableCamera>();
 }
 
 //======================================================================================================================
 
 SolarSystem::~SolarSystem()
 {
-    // ImGui cleanup
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
+	// ImGui cleanup
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
 }
 
 //======================================================================================================================
 
 void SolarSystem::Run()
 {
-    while (mWindow->shouldClose() == false)
-    {
-        glfwPollEvents(); // Propagate events to the callback class
+	while (mWindow->shouldClose() == false)
+	{
+		glfwPollEvents(); // Propagate events to the callback class
 
-        mTime->Update();
-        Update(mTime->DeltaTimeSec());
+		mTime->Update();
+		Update(mTime->DeltaTimeSec());
 
-        // glEnable(GL_FRAMEBUFFER_SRGB); // Expect Colour to be encoded in sRGB standard (as opposed to RGB)
-        glClearColor(0.2f, 0.6f, 0.8f, 1.0f);
-        // https://www.viewsonic.com/library/creative-work/srgb-vs-adobe-rgb-which-one-to-use/
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear render screen (all zero) and depth (all max depth)
-        glViewport(0, 0, mWindow->getWidth(), mWindow->getHeight());
+		// glEnable(GL_FRAMEBUFFER_SRGB); // Expect Colour to be encoded in sRGB standard (as opposed to RGB)
+		glClearColor(0.2f, 0.6f, 0.8f, 1.0f);
+		// https://www.viewsonic.com/library/creative-work/srgb-vs-adobe-rgb-which-one-to-use/
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear render screen (all zero) and depth (all max depth)
+		glViewport(0, 0, mWindow->getWidth(), mWindow->getHeight());
 
-        Render();
+		Render();
 
-        // glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui (if used)
+		// glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui (if used)
 
-        // Starting the new ImGui frame
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
+		// Starting the new ImGui frame
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
 
-        UI();
+		UI();
 
-        ImGui::Render(); // Render the ImGui window
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData()); // Some middleware thing
+		ImGui::Render(); // Render the ImGui window
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData()); // Some middleware thing
 
-        mWindow->swapBuffers(); // Swap the buffers while displaying the previous
-    }
+		mWindow->swapBuffers(); // Swap the buffers while displaying the previous
+	}
 }
 
 //======================================================================================================================
 
 void SolarSystem::Update(float const deltaTime)
 {
-    auto const cursorPosition = mInputManager->CursorPosition();
+	auto const cursorPosition = mInputManager->CursorPosition();
 
-    if (mCursorPositionIsSetOnce == true)
-    {
-        if (mInputManager->IsMouseButtonDown(GLFW_MOUSE_BUTTON_RIGHT) == true)
-        {
-            auto const deltaPosition = cursorPosition - mPreviousCursorPosition;
-            mTurnTableCamera->ChangeTheta(-static_cast<float>(deltaPosition.x) * mRotationSpeed * deltaTime);
-            mTurnTableCamera->ChangePhi(-static_cast<float>(deltaPosition.y) * mRotationSpeed * deltaTime);
-        }
-    }
+	if (mCursorPositionIsSetOnce == true)
+	{
+		if (mInputManager->IsMouseButtonDown(GLFW_MOUSE_BUTTON_RIGHT) == true)
+		{
+			auto const deltaPosition = cursorPosition - mPreviousCursorPosition;
+			mTurnTableCamera->ChangeTheta(-static_cast<float>(deltaPosition.x) * mRotationSpeed * deltaTime);
+			mTurnTableCamera->ChangePhi(-static_cast<float>(deltaPosition.y) * mRotationSpeed * deltaTime);
+		}
+	}
 
-    mCursorPositionIsSetOnce = true;
-    mPreviousCursorPosition = cursorPosition;
+	mCursorPositionIsSetOnce = true;
+	mPreviousCursorPosition = cursorPosition;
 }
 
 //======================================================================================================================
 
 void SolarSystem::Render()
 {
-    mBasicShader->use();
+	mBasicShader->use();
 
-    glEnable(GL_CULL_FACE);  // Enable culling
-    glFrontFace(GL_CCW);
-    glCullFace(GL_BACK);     // Cull back faces
+	glEnable(GL_CULL_FACE);  // Enable culling
+	glFrontFace(GL_CCW);
+	glCullFace(GL_BACK);     // Cull back faces
 
-    float const aspectRatio = static_cast<float>(mWindow->getWidth()) / static_cast<float>(mWindow->getHeight());
-    auto const projection = glm::perspective(mFovY, aspectRatio, mZNear, mZFar);
-    glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "projection"), 1, GL_FALSE, reinterpret_cast<float const *>(&projection));
+	float const aspectRatio = static_cast<float>(mWindow->getWidth()) / static_cast<float>(mWindow->getHeight());
+	auto const projection = glm::perspective(mFovY, aspectRatio, mZNear, mZFar);
+	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "projection"), 1, GL_FALSE, reinterpret_cast<float const*>(&projection));
 
-    auto const view = mTurnTableCamera->ViewMatrix();
-    glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "view"), 1, GL_FALSE, reinterpret_cast<float const *>(&view));
+	auto const view = mTurnTableCamera->ViewMatrix();
+	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "view"), 1, GL_FALSE, reinterpret_cast<float const*>(&view));
 
-    auto const model = glm::identity<glm::mat4>();
-    glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const *>(&model));
+	auto const model = glm::identity<glm::mat4>();
+	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const*>(&model));
 
-    mUnitCubeGeometry->bind();
+	mUnitCubeGeometry->bind();
 
-    glDrawArrays(GL_TRIANGLES, 0, mUnitCubeIndexCount);
-    // Hint: Use glDrawElements for using the index buffer (EBO)
+	glDrawArrays(GL_TRIANGLES, 0, mUnitCubeIndexCount);
+	// draw the points for debug
+	//glPointSize(10.0f);
+	//glDrawArrays(GL_POINTS, 0, mUnitCubeIndexCount);
+	// Hint: Use glDrawElements for using the index buffer (EBO)
 }
 
 //======================================================================================================================
 
 void SolarSystem::UI()
 {
-    ImGui::Begin("Options");
-    ImGui::Text("FPS: %f", 1.0f / mTime->DeltaTimeSec());
-    ImGui::End();
+	ImGui::Begin("Options");
+	ImGui::Text("FPS: %f", 1.0f / mTime->DeltaTimeSec());
+	ImGui::End();
 }
 
 //======================================================================================================================
 
 void SolarSystem::PrepareUnitSphereGeometry()
 {
-    mUnitCubeGeometry = std::make_unique<GPU_Geometry>();
+	mUnitCubeGeometry = std::make_unique<GPU_Geometry>();
 
-    auto const unitCube = ShapeGenerator::UnitCube();
-    mUnitCubeGeometry->Update(unitCube);
+	//auto const unitCube = ShapeGenerator::UnitCube();
+	auto const unitSphere = ShapeGenerator::Sphere(1.0f, 20, 20);
 
-    mUnitCubeIndexCount = static_cast<int>(unitCube.positions.size());
+	//mUnitCubeGeometry->Update(unitCube);
+	mUnitCubeGeometry->Update(unitSphere);
+
+	//mUnitCubeIndexCount = static_cast<int>(unitCube.positions.size());
+	mUnitCubeIndexCount = static_cast<int>(unitSphere.positions.size());
 }
 
 //======================================================================================================================
 
 void SolarSystem::OnResize(int width, int height)
 {
-    // TODO
+	// TODO
 }
 
 //======================================================================================================================
 
 void SolarSystem::OnMouseWheelChange(double const xOffset, double const yOffset) const
 {
-    mTurnTableCamera->ChangeRadius(-static_cast<float>(yOffset) * mZoomSpeed * mTime->DeltaTimeSec());
+	mTurnTableCamera->ChangeRadius(-static_cast<float>(yOffset) * mZoomSpeed * mTime->DeltaTimeSec());
 }
 
 //======================================================================================================================
