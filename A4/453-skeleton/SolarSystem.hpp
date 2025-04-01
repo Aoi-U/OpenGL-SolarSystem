@@ -20,9 +20,15 @@ public:
 
 private:
 
+	// holds the planet texture and other properties
+	struct Planet {
+		std::unique_ptr<Texture> texture;
+		
+	};
+
 	void Update(float deltaTime);
 
-	void Render();
+	void Render(const Planet& planet);
 
 	void UI();
 
@@ -42,6 +48,8 @@ private:
 
 	std::unique_ptr<GPU_Geometry> mUnitCubeGeometry;
 	int mUnitCubeIndexCount{};
+
+	std::vector<Planet> mPlanets{}; // vector of planets in the solar system
 
 	std::unique_ptr<TurnTableCamera> mTurnTableCamera{};
 	glm::dvec2 mPreviousCursorPosition{};

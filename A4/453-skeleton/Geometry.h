@@ -47,9 +47,9 @@ private:
 
 	void UpdateNormals(size_t count, Normal const* normals);
 
-	// void UpdateUVs(size_t count, UV const * uvs);
+	void UpdateUVs(size_t count, UV const* uvs);
 
-		// void UpdateIndices(size_t count, Index const * indices);
+	// void UpdateIndices(size_t count, Index const * indices);
 
 public:
 
@@ -63,9 +63,9 @@ private:
 	VertexBuffer positionsBuffer;
 	VertexBuffer colorsBuffer;
 	VertexBuffer normalsBuffer;
-	// VertexBuffer uvsBuffer;
+	VertexBuffer uvsBuffer;
 
-		// IndexBuffer indexBuffer;
+	// IndexBuffer indexBuffer;
 
 private:
 

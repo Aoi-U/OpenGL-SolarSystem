@@ -53,6 +53,8 @@ SolarSystem::SolarSystem()
 		mPath->Get("shaders/test.frag")
 	);
 	mTurnTableCamera = std::make_unique<TurnTableCamera>();
+
+	mPlanets.push_back(Planet{std::make_unique<Texture>(mPath->Get("textures/2k_earth_daymap.jpg"), GL_NEAREST)}); // create planet earth with its texture
 }
 
 //======================================================================================================================
@@ -82,8 +84,7 @@ void SolarSystem::Run()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear render screen (all zero) and depth (all max depth)
 		glViewport(0, 0, mWindow->getWidth(), mWindow->getHeight());
 
-		//mTexture = std::make_unique<Texture>(mPath->Get("textures/EarthNormal.png"), GL_NEAREST);
-		Render();
+		Render(mPlanets[0]); // render earth
 
 		// glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui (if used)
 
@@ -123,10 +124,10 @@ void SolarSystem::Update(float const deltaTime)
 
 //======================================================================================================================
 
-void SolarSystem::Render()
+void SolarSystem::Render(const Planet& planet)
 {
 	mBasicShader->use();
-	mTexture->bind();
+	planet.texture->bind();
 
 	glEnable(GL_CULL_FACE);  // Enable culling
 	glFrontFace(GL_CCW);
@@ -140,6 +141,9 @@ void SolarSystem::Render()
 	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "view"), 1, GL_FALSE, reinterpret_cast<float const*>(&view));
 
 	auto const model = glm::identity<glm::mat4>();
+
+	// NOTE: UPDATE PLANET POSITIONS/SCALES HERE
+
 	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const*>(&model));
 
 	mUnitCubeGeometry->bind();
@@ -164,14 +168,13 @@ void SolarSystem::PrepareUnitSphereGeometry()
 	mUnitCubeGeometry = std::make_unique<GPU_Geometry>();
 
 	//auto const unitCube = ShapeGenerator::UnitCube();
-	auto const unitSphere = ShapeGenerator::Sphere(1.0f, 20, 20);
+	auto const unitSphere = ShapeGenerator::Sphere(1.0f, 50, 50);
 
 	//mUnitCubeGeometry->Update(unitCube);
 	mUnitCubeGeometry->Update(unitSphere);
 
 	//mUnitCubeIndexCount = static_cast<int>(unitCube.positions.size());
 	mUnitCubeIndexCount = static_cast<int>(unitSphere.positions.size());
-	mTexture = std::make_unique<Texture>(mPath->Get("textures/2k_earth_daymap.jpg"), GL_NEAREST);
 }
 
 //======================================================================================================================

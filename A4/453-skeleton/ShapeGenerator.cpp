@@ -53,37 +53,39 @@ CPU_Geometry ShapeGenerator::Sphere(float const radius, int const slices, int co
 			glm::vec3 pThree = positions[i][j + 1];
 			glm::vec3 pFour = positions[i + 1][j + 1];
 
-			geom.positions.push_back(pTwo);
-			geom.positions.push_back(pOne);
-			geom.positions.push_back(pThree);
+			geom.positions.push_back(pThree); // top right
+			geom.positions.push_back(pTwo); // bottom left
+			geom.positions.push_back(pOne); // top left
 			geom.colors.emplace_back(0.f, 1.f, 1.f);
 			geom.colors.emplace_back(0.f, 1.f, 1.f);
 			geom.colors.emplace_back(0.f, 1.f, 1.f);
 
-			geom.positions.push_back(pTwo);
-			geom.positions.push_back(pThree);
-			geom.positions.push_back(pFour);
+			geom.positions.push_back(pThree); // top right
+			geom.positions.push_back(pFour); // bottom right
+			geom.positions.push_back(pTwo); // bottom left
 			geom.colors.emplace_back(0.f, 1.f, 1.f);
 			geom.colors.emplace_back(0.f, 1.f, 1.f);
 			geom.colors.emplace_back(0.f, 1.f, 1.f);
 
-			// add the normals
-			// note: since this is a unit sphere, the normals are simply just the positions of each vertex
-			geom.normals.push_back(pTwo);
-			geom.normals.push_back(pOne);
-			geom.normals.push_back(pThree);
-			geom.normals.push_back(pTwo);
-			geom.normals.push_back(pThree);
-			geom.normals.push_back(pFour);
-			geom.uvs.emplace_back(0.f, 1.f);
-			geom.uvs.emplace_back(0.f, 0.f);
-			geom.uvs.emplace_back(1.f, 0.f);
-			geom.uvs.emplace_back(0.f, 1.f);
-			geom.uvs.emplace_back(1.f, 0.f);
-			geom.uvs.emplace_back(1.f, 1.f);
+			// add the normals to the geometry
+			// since this is a unit sphere, the normals are simply just the positions of each vertex
+			geom.normals.push_back(pThree); // top right
+			geom.normals.push_back(pTwo); // bottom left
+			geom.normals.push_back(pOne); // top left
+			geom.normals.push_back(pThree); // top right 
+			geom.normals.push_back(pFour); // bottom right 
+			geom.normals.push_back(pTwo); // bottom left
+
+			// calculate the texture coordinates
+			geom.uvs.emplace_back(static_cast<float>(i) / static_cast<float>(slices), 1.0f - static_cast<float>(j + 1) / static_cast<float>(stacks)); // top right
+			geom.uvs.emplace_back(static_cast<float>(i + 1) / static_cast<float>(slices), 1.0f - static_cast<float>(j) / static_cast<float>(stacks)); // bottom left
+			geom.uvs.emplace_back(static_cast<float>(i) / static_cast<float>(slices), 1.0f - static_cast<float>(j) / static_cast<float>(stacks)); // top left
+
+			geom.uvs.emplace_back(static_cast<float>(i) / static_cast<float>(slices), 1.0f - static_cast<float>(j + 1) / static_cast<float>(stacks)); // top right
+			geom.uvs.emplace_back(static_cast<float>(i + 1) / static_cast<float>(slices), 1.0f - static_cast<float>(j + 1) / static_cast<float>(stacks)); // bottom right
+			geom.uvs.emplace_back(static_cast<float>(i + 1) / static_cast<float>(slices), 1.0f - static_cast<float>(j) / static_cast<float>(stacks)); // bottom left
 		}
 	}
-
 
 	return geom;
 }
