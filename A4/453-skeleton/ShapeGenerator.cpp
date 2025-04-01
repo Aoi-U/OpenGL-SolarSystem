@@ -115,7 +115,7 @@ CPU_Geometry ShapeGenerator::UnitCube()
 
 	positiveZFace(originQuad, square);
 	colouredTriangles(square, { 1.f, 1.f, 0.f });
-
+	
 	positiveXFace(originQuad, square);
 	colouredTriangles(square, { 1.f, 0.f, 0.f });
 

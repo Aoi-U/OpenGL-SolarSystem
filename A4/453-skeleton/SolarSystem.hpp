@@ -7,6 +7,7 @@
 #include "Texture.h"
 #include "Time.hpp"
 #include "TurnTableCamera.hpp"
+#include "Planet.h"
 
 class SolarSystem
 {
@@ -20,12 +21,6 @@ public:
 
 private:
 
-	// holds the planet texture and other properties
-	struct Planet {
-		std::unique_ptr<Texture> texture;
-		
-	};
-
 	void Update(float deltaTime);
 
 	void Render(const Planet& planet);
@@ -33,6 +28,7 @@ private:
 	void UI();
 
 	void PrepareUnitSphereGeometry();
+	void PrepareBackgroundGeometry();
 
 	void OnResize(int width, int height);
 
@@ -45,9 +41,10 @@ private:
 
 	std::unique_ptr<ShaderProgram> mBasicShader{};
 	std::unique_ptr<Texture> mTexture{};
+	std::unique_ptr<Texture> mBackgroundTexture{};
 
-	std::unique_ptr<GPU_Geometry> mUnitCubeGeometry;
-	int mUnitCubeIndexCount{};
+	std::unique_ptr<GPU_Geometry> mUnitSphereGeometry{};
+	int mUnitSphereIndexCount{};
 
 	std::vector<Planet> mPlanets{}; // vector of planets in the solar system
 
@@ -62,4 +59,5 @@ private:
 	float mZFar = 100.0f;
 	float mZoomSpeed = 20.0f;
 	float mRotationSpeed = 0.25f;
+
 };

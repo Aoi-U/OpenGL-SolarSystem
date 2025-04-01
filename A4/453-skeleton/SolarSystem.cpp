@@ -54,7 +54,11 @@ SolarSystem::SolarSystem()
 	);
 	mTurnTableCamera = std::make_unique<TurnTableCamera>();
 
-	mPlanets.push_back(Planet{std::make_unique<Texture>(mPath->Get("textures/2k_earth_daymap.jpg"), GL_NEAREST)}); // create planet earth with its texture
+	mPlanets.push_back(Planet("textures/2k_stars_milky_way.jpg", { 0.0f, 0.0f, 0.0f }, 20.0f, 0.0f, 0.0f, 0.0f, { 0.0f, 0.0f, 0.0f }));
+	mPlanets.push_back(Planet("textures/2k_sun.jpg", { 0.0f, 0.0f, 0.0f }, 1.0f, 0.0f, 0.0f, 0.0f, { 0.0f, 0.0f, 0.0f }));
+	mPlanets.push_back(Planet("textures/2k_earth_daymap.jpg", { 3.0f, 0.0f, 0.0f }, 0.5f, 1.0, 1.0f, 45.0f, { 0.0f, 0.0f, 0.0f }));
+	mPlanets.push_back(Planet("textures/2k_moon.jpg", { 5.0f, 0.0f, 0.0f }, 0.25f, 2.0, 2.0f, 0.0f, { 3.0f, 0.0f, 0.0f }));
+
 }
 
 //======================================================================================================================
@@ -84,7 +88,10 @@ void SolarSystem::Run()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear render screen (all zero) and depth (all max depth)
 		glViewport(0, 0, mWindow->getWidth(), mWindow->getHeight());
 
-		Render(mPlanets[0]); // render earth
+		Render(mPlanets[0]);
+		Render(mPlanets[1]);
+		Render(mPlanets[2]);
+		Render(mPlanets[3]);
 
 		// glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui (if used)
 
@@ -127,11 +134,11 @@ void SolarSystem::Update(float const deltaTime)
 void SolarSystem::Render(const Planet& planet)
 {
 	mBasicShader->use();
-	planet.texture->bind();
+	planet.getTexture()->bind();
 
-	glEnable(GL_CULL_FACE);  // Enable culling
+	glEnable(GL_CULL_FACE);
 	glFrontFace(GL_CCW);
-	glCullFace(GL_BACK);     // Cull back faces
+	glCullFace(GL_BACK);
 
 	float const aspectRatio = static_cast<float>(mWindow->getWidth()) / static_cast<float>(mWindow->getHeight());
 	auto const projection = glm::perspective(mFovY, aspectRatio, mZNear, mZFar);
@@ -140,15 +147,16 @@ void SolarSystem::Render(const Planet& planet)
 	auto const view = mTurnTableCamera->ViewMatrix();
 	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "view"), 1, GL_FALSE, reinterpret_cast<float const*>(&view));
 
-	auto const model = glm::identity<glm::mat4>();
+	//auto const model = glm::identity<glm::mat4>();
+	auto const model = planet.getModel();
 
-	// NOTE: UPDATE PLANET POSITIONS/SCALES HERE
+	// NOTE: UPDATE PLANET POSITIONS / SCALES HERE
 
 	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const*>(&model));
 
-	mUnitCubeGeometry->bind();
+	mUnitSphereGeometry->bind();
 
-	glDrawArrays(GL_TRIANGLES, 0, mUnitCubeIndexCount);
+	glDrawArrays(GL_TRIANGLES, 0, mUnitSphereIndexCount);
 	// Hint: Use glDrawElements for using the index buffer (EBO)
 }
 
@@ -165,16 +173,13 @@ void SolarSystem::UI()
 
 void SolarSystem::PrepareUnitSphereGeometry()
 {
-	mUnitCubeGeometry = std::make_unique<GPU_Geometry>();
+	mUnitSphereGeometry = std::make_unique<GPU_Geometry>();
 
-	//auto const unitCube = ShapeGenerator::UnitCube();
 	auto const unitSphere = ShapeGenerator::Sphere(1.0f, 50, 50);
 
-	//mUnitCubeGeometry->Update(unitCube);
-	mUnitCubeGeometry->Update(unitSphere);
+	mUnitSphereGeometry->Update(unitSphere);
 
-	//mUnitCubeIndexCount = static_cast<int>(unitCube.positions.size());
-	mUnitCubeIndexCount = static_cast<int>(unitSphere.positions.size());
+	mUnitSphereIndexCount = static_cast<int>(unitSphere.positions.size());
 }
 
 //======================================================================================================================
