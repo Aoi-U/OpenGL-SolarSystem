@@ -52,7 +52,6 @@ SolarSystem::SolarSystem()
 		mPath->Get("shaders/test.vert"),
 		mPath->Get("shaders/test.frag")
 	);
-
 	mTurnTableCamera = std::make_unique<TurnTableCamera>();
 }
 
@@ -83,6 +82,7 @@ void SolarSystem::Run()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear render screen (all zero) and depth (all max depth)
 		glViewport(0, 0, mWindow->getWidth(), mWindow->getHeight());
 
+		//mTexture = std::make_unique<Texture>(mPath->Get("textures/EarthNormal.png"), GL_NEAREST);
 		Render();
 
 		// glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui (if used)
@@ -126,6 +126,7 @@ void SolarSystem::Update(float const deltaTime)
 void SolarSystem::Render()
 {
 	mBasicShader->use();
+	mTexture->bind();
 
 	glEnable(GL_CULL_FACE);  // Enable culling
 	glFrontFace(GL_CCW);
@@ -144,9 +145,6 @@ void SolarSystem::Render()
 	mUnitCubeGeometry->bind();
 
 	glDrawArrays(GL_TRIANGLES, 0, mUnitCubeIndexCount);
-	// draw the points for debug
-	//glPointSize(10.0f);
-	//glDrawArrays(GL_POINTS, 0, mUnitCubeIndexCount);
 	// Hint: Use glDrawElements for using the index buffer (EBO)
 }
 
@@ -173,6 +171,7 @@ void SolarSystem::PrepareUnitSphereGeometry()
 
 	//mUnitCubeIndexCount = static_cast<int>(unitCube.positions.size());
 	mUnitCubeIndexCount = static_cast<int>(unitSphere.positions.size());
+	mTexture = std::make_unique<Texture>(mPath->Get("textures/2k_earth_daymap.jpg"), GL_NEAREST);
 }
 
 //======================================================================================================================

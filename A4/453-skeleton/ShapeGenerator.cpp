@@ -23,7 +23,7 @@ CPU_Geometry ShapeGenerator::Sphere(float const radius, int const slices, int co
 	singleCurve.emplace_back(0.0f, -radius, 0.0f);
 
 	std::vector <std::vector<glm::vec3>> positions{};
-	
+
 	// generate a surface of revolution
 	for (float u = 0; u < glm::two_pi<float>(); u += glm::two_pi<float>() / slices)
 	{
@@ -53,20 +53,12 @@ CPU_Geometry ShapeGenerator::Sphere(float const radius, int const slices, int co
 			glm::vec3 pThree = positions[i][j + 1];
 			glm::vec3 pFour = positions[i + 1][j + 1];
 
-			geom.positions.push_back(pOne);
 			geom.positions.push_back(pTwo);
+			geom.positions.push_back(pOne);
 			geom.positions.push_back(pThree);
 			geom.colors.emplace_back(0.f, 1.f, 1.f);
 			geom.colors.emplace_back(0.f, 1.f, 1.f);
 			geom.colors.emplace_back(0.f, 1.f, 1.f);
-
-			// calculate normals
-			glm::vec3 normalOne = glm::normalize(glm::cross(pTwo - pOne, pThree - pOne));
-			glm::vec3 normalTwo = glm::normalize(glm::cross(pThree - pTwo, pFour - pTwo));
-
-			geom.normals.push_back(normalOne);
-			geom.normals.push_back(normalOne);
-			geom.normals.push_back(normalOne);
 
 			geom.positions.push_back(pTwo);
 			geom.positions.push_back(pThree);
@@ -75,11 +67,23 @@ CPU_Geometry ShapeGenerator::Sphere(float const radius, int const slices, int co
 			geom.colors.emplace_back(0.f, 1.f, 1.f);
 			geom.colors.emplace_back(0.f, 1.f, 1.f);
 
-			geom.normals.push_back(normalTwo);
-			geom.normals.push_back(normalTwo);
-			geom.normals.push_back(normalTwo);
+			// add the normals
+			// note: since this is a unit sphere, the normals are simply just the positions of each vertex
+			geom.normals.push_back(pTwo);
+			geom.normals.push_back(pOne);
+			geom.normals.push_back(pThree);
+			geom.normals.push_back(pTwo);
+			geom.normals.push_back(pThree);
+			geom.normals.push_back(pFour);
+			geom.uvs.emplace_back(0.f, 1.f);
+			geom.uvs.emplace_back(0.f, 0.f);
+			geom.uvs.emplace_back(1.f, 0.f);
+			geom.uvs.emplace_back(0.f, 1.f);
+			geom.uvs.emplace_back(1.f, 0.f);
+			geom.uvs.emplace_back(1.f, 1.f);
 		}
 	}
+
 
 	return geom;
 }

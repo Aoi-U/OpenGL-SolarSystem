@@ -38,6 +38,7 @@ private:
 	std::shared_ptr<InputManager> mInputManager{};
 
 	std::unique_ptr<ShaderProgram> mBasicShader{};
+	std::unique_ptr<Texture> mTexture{};
 
 	std::unique_ptr<GPU_Geometry> mUnitCubeGeometry;
 	int mUnitCubeIndexCount{};
