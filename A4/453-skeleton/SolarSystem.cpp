@@ -54,10 +54,10 @@ SolarSystem::SolarSystem()
 	);
 	mTurnTableCamera = std::make_unique<TurnTableCamera>();
 
-	mPlanets.push_back(Planet("textures/2k_stars_milky_way.jpg", { 0.0f, 0.0f, 0.0f }, 20.0f, 0.0f, 0.0f, 0.0f, { 0.0f, 0.0f, 0.0f }));
-	mPlanets.push_back(Planet("textures/2k_sun.jpg", { 0.0f, 0.0f, 0.0f }, 1.0f, 0.0f, 0.0f, 0.0f, { 0.0f, 0.0f, 0.0f }));
-	mPlanets.push_back(Planet("textures/2k_earth_daymap.jpg", { 3.0f, 0.0f, 0.0f }, 0.5f, 1.0, 1.0f, 45.0f, { 0.0f, 0.0f, 0.0f }));
-	mPlanets.push_back(Planet("textures/2k_moon.jpg", { 5.0f, 0.0f, 0.0f }, 0.25f, 2.0, 2.0f, 0.0f, { 3.0f, 0.0f, 0.0f }));
+	mPlanets.push_back(Planet("textures/2k_stars_milky_way.jpg", 0.0f, 20.0f, 0.0f, 0.0f, 0.0f, { 0.0f, 0.0f, 0.0f }));
+	mPlanets.push_back(Planet("textures/2k_sun.jpg", 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, { 0.0f, 0.0f, 0.0f }));
+	mPlanets.push_back(Planet("textures/2k_earth_daymap.jpg", 3.0f, 0.5f, 1.0, 1.0f, 45.0f, { 0.0f, 0.0f, 0.0f }));
+	mPlanets.push_back(Planet("textures/2k_moon.jpg", 1.0f, 0.25f, 5.0, 2.0f, 1.0f, mPlanets[2].getPosition()));
 
 }
 
@@ -127,6 +127,22 @@ void SolarSystem::Update(float const deltaTime)
 
 	mCursorPositionIsSetOnce = true;
 	mPreviousCursorPosition = cursorPosition;
+
+	float changeInTime = deltaTime - prevTime;
+	prevTime = deltaTime;
+
+	UpdatePlanets(deltaTime);
+}
+
+void SolarSystem::UpdatePlanets(float deltaTime)
+{
+	mPlanets[1].update(deltaTime);
+
+	mPlanets[2].update(deltaTime);
+
+	mPlanets[3].updateCenterOfOrbit(mPlanets[2].getPosition());
+	mPlanets[3].update(deltaTime);
+
 }
 
 //======================================================================================================================

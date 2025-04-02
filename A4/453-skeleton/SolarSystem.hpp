@@ -23,12 +23,13 @@ private:
 
 	void Update(float deltaTime);
 
+	void UpdatePlanets(float deltaTime);
+
 	void Render(const Planet& planet);
 
 	void UI();
 
 	void PrepareUnitSphereGeometry();
-	void PrepareBackgroundGeometry();
 
 	void OnResize(int width, int height);
 
@@ -59,5 +60,7 @@ private:
 	float mZFar = 100.0f;
 	float mZoomSpeed = 20.0f;
 	float mRotationSpeed = 0.25f;
+
+	float prevTime = 0.0f;
 
 };

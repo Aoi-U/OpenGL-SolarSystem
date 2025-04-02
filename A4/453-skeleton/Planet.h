@@ -9,15 +9,20 @@ class Planet
 private:
 	std::shared_ptr<AssetPath> mPath;
 	std::unique_ptr<Texture> mTexture; // texture of the planet
-	glm::vec3 mPosition; // position of the planet
+	float mOrbitRadius; // radius of the orbit
 	float mScale; // scale of the planet
-	float mOrbitSpeed; // orbit speed of the planet
-	float mRotationSpeed; // rotation speed of the planet
-	float mTilt; // axis tilt of the planet
-	glm::vec3 mCenter; // center of orbit
+	float mOrbitSpeed; // speed of the orbit
+	float mRotationSpeed; // speed of the rotation
+	float mTilt; // tilt of the planet
+	glm::vec3 mPosition; // position of the planet
+	glm::vec3 mCenterOfOrbit; // center of orbit
+
+	glm::mat4 mModel;
 
 public:
-	Planet(std::string texture, glm::vec3 position, float scale, float orbitSpeed, float rotationSpeed, float tilt, glm::vec3 center);
+	Planet(std::string texture, float orbitRadius, float scale, float orbitSpeed, float rotationSpeed, float tilt, glm::vec3 centerOfOrbit);
+
+	void updateCenterOfOrbit(glm::vec3 center) { mCenterOfOrbit = center; }
 	
 	Texture* getTexture() const { return mTexture.get(); }
 
