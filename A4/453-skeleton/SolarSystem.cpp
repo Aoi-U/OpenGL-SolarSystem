@@ -55,10 +55,45 @@ SolarSystem::SolarSystem()
 	mTurnTableCamera = std::make_unique<TurnTableCamera>();
 
 	mPlanets.push_back(Planet("textures/2k_stars_milky_way.jpg", 0.0f, 20.0f, 0.0f, 0.0f, 0.0f, { 0.0f, 0.0f, 0.0f }));
-	mPlanets.push_back(Planet("textures/2k_sun.jpg", 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, { 0.0f, 0.0f, 0.0f }));
-	mPlanets.push_back(Planet("textures/2k_earth_daymap.jpg", 3.0f, 0.5f, 1.0, 1.0f, 45.0f, { 0.0f, 0.0f, 0.0f }));
-	mPlanets.push_back(Planet("textures/2k_moon.jpg", 1.0f, 0.25f, 5.0, 2.0f, 1.0f, mPlanets[2].getPosition()));
+	mPlanets.push_back(Planet("textures/2k_sun.jpg", 0.0f, 1.0f, 0.0f, 1.997f, 0.0f, { 0.0f, 0.0f, 0.0f }));
+	mPlanets.push_back(Planet("textures/2k_earth_daymap.jpg", 5.0f, 0.5f, 1.0, 30.0f, 23.5f, { 0.0f, 0.0f, 0.0f }));
+	mPlanets.push_back(Planet("textures/2k_moon.jpg", 0.5f, 0.25f, 5.0, 2.0f, 1.0f, mPlanets[2].getPosition()));
 
+
+	// AXIS FOR DEBUG REMOVE LATER
+	CPU_Geometry xAxis{};
+	CPU_Geometry yAxis{};
+	CPU_Geometry zAxis{};
+
+	xAxis.positions.emplace_back(glm::vec3(-5.0f, 0.0f, 0.0f));
+	xAxis.positions.emplace_back(glm::vec3(5.0f, 0.0f, 0.0f));
+	xAxis.colors.emplace_back(glm::vec3(1.0f, 0.0f, 0.0f));
+	xAxis.colors.emplace_back(glm::vec3(1.0f, 0.0f, 0.0f));
+	xAxis.normals.emplace_back(glm::vec3(0.0f, 0.0f, 1.0f));
+	xAxis.normals.emplace_back(glm::vec3(0.0f, 0.0f, 1.0f));
+
+	yAxis.positions.emplace_back(glm::vec3(0.0f, -5.0f, 0.0f));
+	yAxis.positions.emplace_back(glm::vec3(0.0f, 5.0f, 0.0f));
+	yAxis.colors.emplace_back(glm::vec3(0.0f, 5.0f, 0.0f));
+	yAxis.colors.emplace_back(glm::vec3(0.0f, 5.0f, 0.0f));
+	yAxis.normals.emplace_back(glm::vec3(0.0f, 0.0f, 1.0f));
+	yAxis.normals.emplace_back(glm::vec3(0.0f, 0.0f, 1.0f));
+
+	zAxis.positions.emplace_back(glm::vec3(0.0f, 0.0f, -5.0f));
+	zAxis.positions.emplace_back(glm::vec3(0.0f, 0.0f, 5.0f));
+	zAxis.colors.emplace_back(glm::vec3(0.0f, 0.0f, 1.0f));
+	zAxis.colors.emplace_back(glm::vec3(0.0f, 0.0f, 1.0f));
+	zAxis.normals.emplace_back(glm::vec3(0.0f, 0.0f, 1.0f));
+	zAxis.normals.emplace_back(glm::vec3(0.0f, 0.0f, 1.0f));
+	
+	xAxisGPU = std::make_unique<GPU_Geometry>();
+	yAxisGPU = std::make_unique<GPU_Geometry>();
+	zAxisGPU = std::make_unique<GPU_Geometry>();
+
+	xAxisGPU->Update(xAxis);
+	yAxisGPU->Update(yAxis);
+	zAxisGPU->Update(zAxis);
+	// DEBUG END HERE
 }
 
 //======================================================================================================================
@@ -128,20 +163,20 @@ void SolarSystem::Update(float const deltaTime)
 	mCursorPositionIsSetOnce = true;
 	mPreviousCursorPosition = cursorPosition;
 
-	float changeInTime = deltaTime - prevTime;
-	prevTime = deltaTime;
-
 	UpdatePlanets(deltaTime);
+
+
 }
 
 void SolarSystem::UpdatePlanets(float deltaTime)
 {
 	mPlanets[1].update(deltaTime);
 
+	mPlanets[2].updateCenterOfOrbit(mPlanets[1].getPosition());
 	mPlanets[2].update(deltaTime);
-
 	mPlanets[3].updateCenterOfOrbit(mPlanets[2].getPosition());
 	mPlanets[3].update(deltaTime);
+
 
 }
 
@@ -174,6 +209,13 @@ void SolarSystem::Render(const Planet& planet)
 
 	glDrawArrays(GL_TRIANGLES, 0, mUnitSphereIndexCount);
 	// Hint: Use glDrawElements for using the index buffer (EBO)
+
+	xAxisGPU->bind();
+	glDrawArrays(GL_LINES, 0, 2);
+	yAxisGPU->bind();
+	glDrawArrays(GL_LINES, 0, 2);
+	zAxisGPU->bind();
+	glDrawArrays(GL_LINES, 0, 2);
 }
 
 //======================================================================================================================

@@ -14,7 +14,6 @@ private:
 	float mOrbitSpeed; // speed of the orbit
 	float mRotationSpeed; // speed of the rotation
 	float mTilt; // tilt of the planet
-	glm::vec3 mPosition; // position of the planet
 	glm::vec3 mCenterOfOrbit; // center of orbit
 
 	glm::mat4 mModel;
@@ -28,7 +27,7 @@ public:
 
 	glm::mat4 getModel() const;
 
-	glm::vec3 getPosition() const { return mPosition; }
+	glm::vec3 getPosition() const;
 
 	void update(float deltaTime);
 };
