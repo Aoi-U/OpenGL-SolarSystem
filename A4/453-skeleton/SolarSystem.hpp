@@ -37,8 +37,6 @@ private:
 
 	void OnMouseWheelChange(double xOffset, double yOffset) const;
 
-	static constexpr int SunFullRotation = 2332800; // 27 Earth days in seconds
-
 	// GPU GEOMETRY AXIS FOR DEBUG
 	std::unique_ptr<GPU_Geometry> xAxisGPU{};
 	std::unique_ptr<GPU_Geometry> yAxisGPU{};

@@ -53,12 +53,13 @@ SolarSystem::SolarSystem()
 		mPath->Get("shaders/test.vert"),
 		mPath->Get("shaders/test.frag")
 	);
-	mTurnTableCamera = std::make_unique<TurnTableCamera>();
 
-	background = std::make_unique<Planet>(Planet{ "textures/2k_stars_milky_way.jpg", 0.0f, 15.0f, 0.0f, 0.0f, 0.0f, 0.0f, { 0.0f, 0.0f, 0.0f }});
-	sun = std::make_unique<Planet>(Planet{ "textures/2k_sun.jpg", 0.0f, 1.0f, 0.0f, 1.997f, 0.0f, 0.0f, { 0.0f, 0.0f, 0.0f } });
-	earth = std::make_unique<Planet>(Planet{ "textures/2k_earth_daymap.jpg", 5.0f, 0.5f, 0.25f, 100.0f, 23.5f, 1.0f, { 0.0f, 0.0f, 0.0f } });
-	moon = std::make_unique<Planet>(Planet{ "textures/2k_moon.jpg", 1.0f, 0.25f, -2.0f, 5.0f, 1.0f, 5.0f, earth->getPosition() });
+	background = std::make_unique<Planet>(Planet{ "textures/2k_stars_milky_way.jpg", 0.0f, 500.0f, 0.0f, 0.0f, 0.0f, 0.0f, { 0.0f, 0.0f, 0.0f }});
+	sun = std::make_unique<Planet>(Planet{ "textures/2k_sun.jpg", 0.0f, 1.09f, 0.0f, 1.997f, 0.0f, 0.0f, { 0.0f, 0.0f, 0.0f } });
+	earth = std::make_unique<Planet>(Planet{ "textures/2k_earth_daymap.jpg", 5.0f, 0.05f, 29.8f, 30.0f, 23.5f, 15.0f, { 0.0f, 0.0f, 0.0f } });
+	moon = std::make_unique<Planet>(Planet{ "textures/2k_moon.jpg", 0.5f, 0.0125f, 200.0f, 0.46f, 10.0f, 10.0f, earth->getPosition() });
+		
+	mTurnTableCamera = std::make_unique<TurnTableCamera>();
 
 	// AXIS FOR DEBUG REMOVE LATER
 	CPU_Geometry xAxis{};
@@ -161,8 +162,13 @@ void SolarSystem::Update(float const deltaTime)
 	mCursorPositionIsSetOnce = true;
 	mPreviousCursorPosition = cursorPosition;
 
-	// calculate the scaled current time 
-
+	float currTime = static_cast<float>(glfwGetTime());
+	float changeInTime = currTime - prevTime;
+	//std::cout << "Current time: " << currTime << " Previous time: " << prevTime << " Change in time: " << changeInTime << std::endl;
+	prevTime = currTime;
+	// 1s = 1 day
+	UpdatePlanets(changeInTime);
+	//std::cout << "Current earth orbit: " << earth->getCurrentOrbit() << std::endl;
 }
 
 void SolarSystem::UpdatePlanets(float time)
@@ -171,6 +177,7 @@ void SolarSystem::UpdatePlanets(float time)
 	earth->update(time);
 	moon->updateCenterOfOrbit(earth->getPosition());
 	moon->update(time);
+
 }
 
 //======================================================================================================================
@@ -264,7 +271,7 @@ void SolarSystem::PrepareUnitSphereGeometry()
 {
 	mUnitSphereGeometry = std::make_unique<GPU_Geometry>();
 
-	auto const unitSphere = ShapeGenerator::Sphere(1.0f, 50, 50);
+	auto const unitSphere = ShapeGenerator::Sphere(1.0f, 100, 100);
 
 	mUnitSphereGeometry->Update(unitSphere);
 
@@ -274,7 +281,7 @@ void SolarSystem::PrepareUnitSphereGeometry()
 void SolarSystem::PrepareBackgroundSphereGeometry()
 {
 	mBackgroundSphereGeometry = std::make_unique<GPU_Geometry>();
-	auto const backgroundSphere = ShapeGenerator::BackgroundSphere(1.0f, 50, 50);
+	auto const backgroundSphere = ShapeGenerator::BackgroundSphere(1.0f, 100, 100);
 	mBackgroundSphereGeometry->Update(backgroundSphere);
 	mBackgroundSphereIndexCount = static_cast<int>(backgroundSphere.positions.size());
 }
