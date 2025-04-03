@@ -14,12 +14,13 @@ private:
 	float mOrbitSpeed; // speed of the orbit
 	float mRotationSpeed; // speed of the rotation
 	float mTilt; // tilt of the planet
+	float mInclination; // inclination of the planet
 	glm::vec3 mCenterOfOrbit; // center of orbit
 
 	glm::mat4 mModel;
 
 public:
-	Planet(std::string texture, float orbitRadius, float scale, float orbitSpeed, float rotationSpeed, float tilt, glm::vec3 centerOfOrbit);
+	Planet(std::string texture, float orbitRadius, float scale, float orbitSpeed, float rotationSpeed, float tilt, float inclination, glm::vec3 centerOfOrbit);
 
 	void updateCenterOfOrbit(glm::vec3 center) { mCenterOfOrbit = center; }
 	

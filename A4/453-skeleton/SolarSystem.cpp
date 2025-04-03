@@ -47,6 +47,7 @@ SolarSystem::SolarSystem()
 	mWindow->setCallbacks(mInputManager);
 
 	PrepareUnitSphereGeometry();
+	PrepareBackgroundSphereGeometry();
 
 	mBasicShader = std::make_unique<ShaderProgram>(
 		mPath->Get("shaders/test.vert"),
@@ -54,10 +55,10 @@ SolarSystem::SolarSystem()
 	);
 	mTurnTableCamera = std::make_unique<TurnTableCamera>();
 
-	background = std::make_unique<Planet>(Planet{ "textures/2k_stars_milky_way.jpg", 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, { 0.0f, 0.0f, 0.0f }});
-	sun = std::make_unique<Planet>(Planet{ "textures/2k_sun.jpg", 0.0f, 1.0f, 0.0f, 1.997f, 0.0f, { 0.0f, 0.0f, 0.0f } });
-	earth = std::make_unique<Planet>(Planet{ "textures/2k_earth_daymap.jpg", 5.0f, 0.5f, 0.5f, 100.0f, 23.5f, { 0.0f, 0.0f, 0.0f } });
-	moon = std::make_unique<Planet>(Planet{ "textures/2k_moon.jpg", 0.5f, 0.25f, 3.0f, 2.0f, 1.0f, earth->getPosition() });
+	background = std::make_unique<Planet>(Planet{ "textures/2k_stars_milky_way.jpg", 0.0f, 15.0f, 0.0f, 0.0f, 0.0f, 0.0f, { 0.0f, 0.0f, 0.0f }});
+	sun = std::make_unique<Planet>(Planet{ "textures/2k_sun.jpg", 0.0f, 1.0f, 0.0f, 1.997f, 0.0f, 0.0f, { 0.0f, 0.0f, 0.0f } });
+	earth = std::make_unique<Planet>(Planet{ "textures/2k_earth_daymap.jpg", 5.0f, 0.5f, 0.25f, 100.0f, 23.5f, 1.0f, { 0.0f, 0.0f, 0.0f } });
+	moon = std::make_unique<Planet>(Planet{ "textures/2k_moon.jpg", 1.0f, 0.25f, -2.0f, 5.0f, 1.0f, 5.0f, earth->getPosition() });
 
 	// AXIS FOR DEBUG REMOVE LATER
 	CPU_Geometry xAxis{};
@@ -160,15 +161,16 @@ void SolarSystem::Update(float const deltaTime)
 	mCursorPositionIsSetOnce = true;
 	mPreviousCursorPosition = cursorPosition;
 
-	UpdatePlanets(deltaTime);
+	// calculate the scaled current time 
+
 }
 
-void SolarSystem::UpdatePlanets(float deltaTime)
+void SolarSystem::UpdatePlanets(float time)
 {
-	sun->update(deltaTime);
-	earth->update(deltaTime);
+	sun->update(time);
+	earth->update(time);
 	moon->updateCenterOfOrbit(earth->getPosition());
-	moon->update(deltaTime);
+	moon->update(time);
 }
 
 //======================================================================================================================
@@ -192,8 +194,8 @@ void SolarSystem::Render()
 	background->getTexture()->bind();
 	auto const model = background->getModel();
 	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const*>(&model));
-	mUnitSphereGeometry->bind();
-	glDrawArrays(GL_TRIANGLES, 0, mUnitSphereIndexCount);
+	mBackgroundSphereGeometry->bind();
+	glDrawArrays(GL_TRIANGLES, 0, mBackgroundSphereIndexCount);
 
 	// render sun
 	sun->getTexture()->bind();
@@ -267,6 +269,14 @@ void SolarSystem::PrepareUnitSphereGeometry()
 	mUnitSphereGeometry->Update(unitSphere);
 
 	mUnitSphereIndexCount = static_cast<int>(unitSphere.positions.size());
+}
+
+void SolarSystem::PrepareBackgroundSphereGeometry()
+{
+	mBackgroundSphereGeometry = std::make_unique<GPU_Geometry>();
+	auto const backgroundSphere = ShapeGenerator::BackgroundSphere(1.0f, 50, 50);
+	mBackgroundSphereGeometry->Update(backgroundSphere);
+	mBackgroundSphereIndexCount = static_cast<int>(backgroundSphere.positions.size());
 }
 
 //======================================================================================================================

@@ -31,9 +31,13 @@ private:
 
 	void PrepareUnitSphereGeometry();
 
+	void PrepareBackgroundSphereGeometry();
+
 	void OnResize(int width, int height);
 
 	void OnMouseWheelChange(double xOffset, double yOffset) const;
+
+	static constexpr int SunFullRotation = 2332800; // 27 Earth days in seconds
 
 	// GPU GEOMETRY AXIS FOR DEBUG
 	std::unique_ptr<GPU_Geometry> xAxisGPU{};
@@ -51,6 +55,9 @@ private:
 
 	std::unique_ptr<GPU_Geometry> mUnitSphereGeometry{};
 	int mUnitSphereIndexCount{};
+
+	std::unique_ptr<GPU_Geometry> mBackgroundSphereGeometry{};
+	int mBackgroundSphereIndexCount{};
 
 	std::unique_ptr<Planet> background{};
 	std::unique_ptr<Planet> sun{};
