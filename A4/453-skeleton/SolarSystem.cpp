@@ -54,33 +54,32 @@ SolarSystem::SolarSystem()
 	);
 	mTurnTableCamera = std::make_unique<TurnTableCamera>();
 
-	mPlanets.push_back(Planet("textures/2k_stars_milky_way.jpg", 0.0f, 20.0f, 0.0f, 0.0f, 0.0f, { 0.0f, 0.0f, 0.0f }));
-	mPlanets.push_back(Planet("textures/2k_sun.jpg", 0.0f, 1.0f, 0.0f, 1.997f, 0.0f, { 0.0f, 0.0f, 0.0f }));
-	mPlanets.push_back(Planet("textures/2k_earth_daymap.jpg", 5.0f, 0.5f, 1.0, 30.0f, 23.5f, { 0.0f, 0.0f, 0.0f }));
-	mPlanets.push_back(Planet("textures/2k_moon.jpg", 0.5f, 0.25f, 5.0, 2.0f, 1.0f, mPlanets[2].getPosition()));
-
+	background = std::make_unique<Planet>(Planet{ "textures/2k_stars_milky_way.jpg", 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, { 0.0f, 0.0f, 0.0f }});
+	sun = std::make_unique<Planet>(Planet{ "textures/2k_sun.jpg", 0.0f, 1.0f, 0.0f, 1.997f, 0.0f, { 0.0f, 0.0f, 0.0f } });
+	earth = std::make_unique<Planet>(Planet{ "textures/2k_earth_daymap.jpg", 5.0f, 0.5f, 0.5f, 100.0f, 23.5f, { 0.0f, 0.0f, 0.0f } });
+	moon = std::make_unique<Planet>(Planet{ "textures/2k_moon.jpg", 0.5f, 0.25f, 3.0f, 2.0f, 1.0f, earth->getPosition() });
 
 	// AXIS FOR DEBUG REMOVE LATER
 	CPU_Geometry xAxis{};
 	CPU_Geometry yAxis{};
 	CPU_Geometry zAxis{};
 
-	xAxis.positions.emplace_back(glm::vec3(-5.0f, 0.0f, 0.0f));
-	xAxis.positions.emplace_back(glm::vec3(5.0f, 0.0f, 0.0f));
+	xAxis.positions.emplace_back(glm::vec3(-3.0f, 0.0f, 0.0f));
+	xAxis.positions.emplace_back(glm::vec3(3.0f, 0.0f, 0.0f));
 	xAxis.colors.emplace_back(glm::vec3(1.0f, 0.0f, 0.0f));
 	xAxis.colors.emplace_back(glm::vec3(1.0f, 0.0f, 0.0f));
-	xAxis.normals.emplace_back(glm::vec3(0.0f, 0.0f, 1.0f));
-	xAxis.normals.emplace_back(glm::vec3(0.0f, 0.0f, 1.0f));
-
-	yAxis.positions.emplace_back(glm::vec3(0.0f, -5.0f, 0.0f));
-	yAxis.positions.emplace_back(glm::vec3(0.0f, 5.0f, 0.0f));
-	yAxis.colors.emplace_back(glm::vec3(0.0f, 5.0f, 0.0f));
-	yAxis.colors.emplace_back(glm::vec3(0.0f, 5.0f, 0.0f));
-	yAxis.normals.emplace_back(glm::vec3(0.0f, 0.0f, 1.0f));
-	yAxis.normals.emplace_back(glm::vec3(0.0f, 0.0f, 1.0f));
-
-	zAxis.positions.emplace_back(glm::vec3(0.0f, 0.0f, -5.0f));
-	zAxis.positions.emplace_back(glm::vec3(0.0f, 0.0f, 5.0f));
+	xAxis.normals.emplace_back(glm::vec3(1.0f, 0.0f, 0.0f));
+	xAxis.normals.emplace_back(glm::vec3(1.0f, 0.0f, 0.0f));
+	
+	yAxis.positions.emplace_back(glm::vec3(0.0f, -3.0f, 0.0f));
+	yAxis.positions.emplace_back(glm::vec3(0.0f, 3.0f, 0.0f));
+	yAxis.colors.emplace_back(glm::vec3(0.0f, 3.0f, 0.0f));
+	yAxis.colors.emplace_back(glm::vec3(0.0f, 3.0f, 0.0f));
+	yAxis.normals.emplace_back(glm::vec3(0.0f, 1.0f, 0.0f));
+	yAxis.normals.emplace_back(glm::vec3(0.0f, 1.0f, 0.0f));
+	
+	zAxis.positions.emplace_back(glm::vec3(0.0f, 0.0f, -3.0f));
+	zAxis.positions.emplace_back(glm::vec3(0.0f, 0.0f, 3.0f));
 	zAxis.colors.emplace_back(glm::vec3(0.0f, 0.0f, 1.0f));
 	zAxis.colors.emplace_back(glm::vec3(0.0f, 0.0f, 1.0f));
 	zAxis.normals.emplace_back(glm::vec3(0.0f, 0.0f, 1.0f));
@@ -118,15 +117,13 @@ void SolarSystem::Run()
 		Update(mTime->DeltaTimeSec());
 
 		// glEnable(GL_FRAMEBUFFER_SRGB); // Expect Colour to be encoded in sRGB standard (as opposed to RGB)
-		glClearColor(0.2f, 0.6f, 0.8f, 1.0f);
+		//glClearColor(0.2f, 0.6f, 0.8f, 1.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f); 
 		// https://www.viewsonic.com/library/creative-work/srgb-vs-adobe-rgb-which-one-to-use/
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear render screen (all zero) and depth (all max depth)
 		glViewport(0, 0, mWindow->getWidth(), mWindow->getHeight());
 
-		Render(mPlanets[0]);
-		Render(mPlanets[1]);
-		Render(mPlanets[2]);
-		Render(mPlanets[3]);
+		Render();
 
 		// glDisable(GL_FRAMEBUFFER_SRGB); // disable sRGB for things like imgui (if used)
 
@@ -164,28 +161,21 @@ void SolarSystem::Update(float const deltaTime)
 	mPreviousCursorPosition = cursorPosition;
 
 	UpdatePlanets(deltaTime);
-
-
 }
 
 void SolarSystem::UpdatePlanets(float deltaTime)
 {
-	mPlanets[1].update(deltaTime);
-
-	mPlanets[2].updateCenterOfOrbit(mPlanets[1].getPosition());
-	mPlanets[2].update(deltaTime);
-	mPlanets[3].updateCenterOfOrbit(mPlanets[2].getPosition());
-	mPlanets[3].update(deltaTime);
-
-
+	sun->update(deltaTime);
+	earth->update(deltaTime);
+	moon->updateCenterOfOrbit(earth->getPosition());
+	moon->update(deltaTime);
 }
 
 //======================================================================================================================
 
-void SolarSystem::Render(const Planet& planet)
+void SolarSystem::Render()
 {
 	mBasicShader->use();
-	planet.getTexture()->bind();
 
 	glEnable(GL_CULL_FACE);
 	glFrontFace(GL_CCW);
@@ -198,24 +188,63 @@ void SolarSystem::Render(const Planet& planet)
 	auto const view = mTurnTableCamera->ViewMatrix();
 	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "view"), 1, GL_FALSE, reinterpret_cast<float const*>(&view));
 
-	//auto const model = glm::identity<glm::mat4>();
-	auto const model = planet.getModel();
-
-	// NOTE: UPDATE PLANET POSITIONS / SCALES HERE
-
+	// render background
+	background->getTexture()->bind();
+	auto const model = background->getModel();
 	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const*>(&model));
-
 	mUnitSphereGeometry->bind();
-
 	glDrawArrays(GL_TRIANGLES, 0, mUnitSphereIndexCount);
-	// Hint: Use glDrawElements for using the index buffer (EBO)
 
+	// render sun
+	sun->getTexture()->bind();
+	auto const sunModel = sun->getModel();
+	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const*>(&sunModel));
+	mUnitSphereGeometry->bind();
+	glDrawArrays(GL_TRIANGLES, 0, mUnitSphereIndexCount);
+	
+	// DEBUG AXIS LINES
 	xAxisGPU->bind();
 	glDrawArrays(GL_LINES, 0, 2);
 	yAxisGPU->bind();
 	glDrawArrays(GL_LINES, 0, 2);
 	zAxisGPU->bind();
 	glDrawArrays(GL_LINES, 0, 2);
+	// END DEBUG
+
+	// render earth
+	earth->getTexture()->bind();
+	auto const earthModel = earth->getModel();
+	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const*>(&earthModel));
+	mUnitSphereGeometry->bind();
+	glDrawArrays(GL_TRIANGLES, 0, mUnitSphereIndexCount);
+
+	// DEBUG AXIS LINES
+	xAxisGPU->bind();
+	glDrawArrays(GL_LINES, 0, 2);
+	yAxisGPU->bind();
+	glDrawArrays(GL_LINES, 0, 2);
+	zAxisGPU->bind();
+	glDrawArrays(GL_LINES, 0, 2);
+	// END DEBUG
+
+	// render moon
+	moon->getTexture()->bind();
+	auto const moonModel = moon->getModel();
+	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const*>(&moonModel));
+	mUnitSphereGeometry->bind();
+	glDrawArrays(GL_TRIANGLES, 0, mUnitSphereIndexCount);
+
+	// DEBUG AXIS LINES
+	xAxisGPU->bind();
+	glDrawArrays(GL_LINES, 0, 2);
+	yAxisGPU->bind();
+	glDrawArrays(GL_LINES, 0, 2);
+	zAxisGPU->bind();
+	glDrawArrays(GL_LINES, 0, 2);
+	// END DEBUG
+	
+	// Hint: Use glDrawElements for using the index buffer (EBO)
+
 }
 
 //======================================================================================================================

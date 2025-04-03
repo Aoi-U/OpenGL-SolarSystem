@@ -25,7 +25,7 @@ private:
 
 	void UpdatePlanets(float deltaTime);
 
-	void Render(const Planet& planet);
+	void Render();
 
 	void UI();
 
@@ -48,12 +48,15 @@ private:
 
 	std::unique_ptr<ShaderProgram> mBasicShader{};
 	std::unique_ptr<Texture> mTexture{};
-	std::unique_ptr<Texture> mBackgroundTexture{};
 
 	std::unique_ptr<GPU_Geometry> mUnitSphereGeometry{};
 	int mUnitSphereIndexCount{};
 
-	std::vector<Planet> mPlanets{}; // vector of planets in the solar system
+	std::unique_ptr<Planet> background{};
+	std::unique_ptr<Planet> sun{};
+	std::unique_ptr<Planet> earth{};
+	std::unique_ptr<Planet> moon{};
+
 
 	std::unique_ptr<TurnTableCamera> mTurnTableCamera{};
 	glm::dvec2 mPreviousCursorPosition{};
