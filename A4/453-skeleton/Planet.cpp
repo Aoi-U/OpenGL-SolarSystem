@@ -48,39 +48,3 @@ void Planet::update(float time)
 	//mModel = matTilt * matCenterPos * matIncline * matPos * matNegIncline * matRotation * mScale;
 	mModel = matCenterPos * matIncline * matPos * matNegIncline * matTilt * matRotation * mScale;
 }
-
-glm::vec3 Planet::getPosition() const
-{
-	return mModel[3]; // return the position of the planet
-}
-
-float Planet::getRotation() const
-{
-	return currentRotation;
-}
-
-float Planet::getCurrentIncline() const
-{
-	return currentIncline; // return the current incline
-}
-
-float Planet::getCurrentOrbit() const
-{
-	return currentOrbit; // return the current orbit
-}
-
-float Planet::getCurrentRotation() const
-{
-	return currentRotation; // return the current rotation
-}
-
-glm::vec3 Planet::getCenterPosition() const
-{
-	return mCenterOfOrbit; // return the center position of the planet
-}
-
-// returns the model matrix for the planet
-glm::mat4 Planet::getModel() const
-{
-	return mModel;
-}

@@ -22,8 +22,7 @@ private:
 	float currentOrbit; // current orbit of the planet 
 	float currentIncline; // current incline factor
 	
-	glm::mat4 mModel;
-
+	glm::mat4 mModel; // model matrix
 
 public:
 	int orbitCount = 0;
@@ -34,19 +33,17 @@ public:
 	
 	Texture* getTexture() const { return mTexture.get(); }
 
-	glm::mat4 getModel() const;
+	glm::mat4 getModel() const { return mModel; }
 
-	glm::vec3 getPosition() const;
-	// get pointer to position
-	glm::vec3* getPositionPtr() { return &mPosition; }
+	glm::vec3 getPosition() const { return mModel[3]; }
 
-	float getRotation() const;
-	float getCurrentIncline() const;
-	float getCurrentOrbit() const;
-	float getCurrentRotation() const;
-	glm::vec3 getCenterPosition() const;
+	float getRotation() const { return currentRotation; }
+	float getCurrentIncline() const { return currentIncline; }
+	float getCurrentOrbit() const { return currentOrbit; }
+	float getCurrentRotation() const { return currentRotation; }
+	glm::vec3 getCenterOfOrbit() const { return mCenterOfOrbit; }
 
-	// return a reference to the model matrix
+	// return model matrix by reference
 	glm::mat4& getModelRef() { return mModel; }
 
 	void update(float deltaTime);
