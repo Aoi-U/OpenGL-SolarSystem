@@ -78,4 +78,8 @@ private:
 
 	float prevTime = 0.0f;
 
+
+	// GUI stuff
+	const char* planetsTarget[3]{ "Sun", "Earth", "Moon" };
+	int selectedTarget = 0;
 };

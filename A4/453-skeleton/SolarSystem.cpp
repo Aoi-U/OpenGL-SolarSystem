@@ -140,6 +140,8 @@ void SolarSystem::Run()
 		ImGui::Render(); // Render the ImGui window
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData()); // Some middleware thing
 
+		//mTurnTableCamera->ChangeTarget()
+
 		mWindow->swapBuffers(); // Swap the buffers while displaying the previous
 	}
 }
@@ -162,6 +164,22 @@ void SolarSystem::Update(float const deltaTime)
 
 	mCursorPositionIsSetOnce = true;
 	mPreviousCursorPosition = cursorPosition;
+
+	switch (selectedTarget)
+	{
+	case 0:
+		mTurnTableCamera->ChangeTarget(sun->getModelRef());
+		break;
+	case 1:
+		mTurnTableCamera->ChangeTarget(earth->getModelRef());
+		break;
+	case 2:
+		mTurnTableCamera->ChangeTarget(moon->getModelRef());
+		break;
+	default:
+		mTurnTableCamera->ChangeTarget(sun->getModelRef());
+		break;
+	}
 
 	float currTime = static_cast<float>(glfwGetTime());
 	float changeInTime = currTime - prevTime;
@@ -273,7 +291,9 @@ void SolarSystem::UI()
 {
 	ImGui::Begin("Options");
 	ImGui::Text("FPS: %f", 1.0f / mTime->DeltaTimeSec());
+	ImGui::Combo("Select planet target", &selectedTarget, planetsTarget, IM_ARRAYSIZE(planetsTarget));
 	ImGui::End();
+
 }
 
 //======================================================================================================================

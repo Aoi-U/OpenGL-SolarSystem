@@ -27,7 +27,10 @@ TurnTableCamera::TurnTableCamera(Transform& target, Params const& params)
 
 void TurnTableCamera::ChangeTarget(Transform& target)
 {
+
 	_target = &target;
+
+	_isDirty = true;
 }
 
 //======================================================================================================================
