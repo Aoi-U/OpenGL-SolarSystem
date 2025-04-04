@@ -54,12 +54,13 @@ SolarSystem::SolarSystem()
 		mPath->Get("shaders/test.frag")
 	);
 
-	background = std::make_unique<Planet>(Planet{ "textures/2k_stars_milky_way.jpg", 0.0f, 500.0f, 0.0f, 0.0f, 0.0f, 0.0f, { 0.0f, 0.0f, 0.0f }});
-	sun = std::make_unique<Planet>(Planet{ "textures/2k_sun.jpg", 0.0f, 1.09f, 0.0f, 1.997f, 0.0f, 0.0f, { 0.0f, 0.0f, 0.0f } });
-	earth = std::make_unique<Planet>(Planet{ "textures/2k_earth_daymap.jpg", 5.0f, 0.05f, 29.8f, 30.0f, 23.5f, 15.0f, { 0.0f, 0.0f, 0.0f } });
-	moon = std::make_unique<Planet>(Planet{ "textures/2k_moon.jpg", 0.5f, 0.0125f, 200.0f, 0.46f, 10.0f, 10.0f, earth->getPosition() });
-		
-	mTurnTableCamera = std::make_unique<TurnTableCamera>();
+	// all planets initial parameters are scaled relative to 365 seconds = one earth year, or 1 second = 1 day
+	background = std::make_unique<Planet>("textures/2k_stars_milky_way.jpg", 0.0f, 500.0f, 0.0f, 0.0f, 0.0f, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
+	sun = std::make_unique<Planet>("textures/2k_sun.jpg", 0.0f, 1.0f, 0.0f, 10.1f, 0.0f, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
+	earth = std::make_unique<Planet>("textures/2k_earth_daymap.jpg", 6.0f, 0.5f, 1.0f, 365.0f, 30.0f, 15.0f, sun->getPosition());
+	moon = std::make_unique<Planet>("textures/2k_moon.jpg", 1.0f, 0.2f, 13.4f, 13.4f, 20.0f, 10.0f, earth->getPosition() );
+
+	mTurnTableCamera = std::make_unique<TurnTableCamera>(sun->getModelRef());
 
 	// AXIS FOR DEBUG REMOVE LATER
 	CPU_Geometry xAxis{};
@@ -177,6 +178,16 @@ void SolarSystem::UpdatePlanets(float time)
 	earth->update(time);
 	moon->updateCenterOfOrbit(earth->getPosition());
 	moon->update(time);
+
+	// every second check earths orbit and rotation
+	if (lastSecond != static_cast<int>(glfwGetTime()))
+	{
+		lastSecond = static_cast<int>(glfwGetTime());
+		std::cout << "Earth orbit: " << earth->orbitCount << std::endl;
+		std::cout << "Earth rotation: " << earth->rotationCount << std::endl;
+		std::cout << "Sun rotation: " << sun->rotationCount << std::endl;
+	}
+
 
 }
 

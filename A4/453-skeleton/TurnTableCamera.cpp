@@ -7,16 +7,16 @@
 
 //======================================================================================================================
 
-TurnTableCamera::TurnTableCamera(/*Transform & target*/)
-	: TurnTableCamera(/*target, */Params{})
+TurnTableCamera::TurnTableCamera(Transform& target)
+	: TurnTableCamera(target, Params{})
 {
 }
 
 //======================================================================================================================
 
-TurnTableCamera::TurnTableCamera(/*Transform & target, */Params const& params)
+TurnTableCamera::TurnTableCamera(Transform& target, Params const& params)
 {
-	// _target = &target;
+	_target = &target;
 
 	_distance = params.defaultDistance;
 	_minDistance = params.minDistance;
@@ -25,10 +25,10 @@ TurnTableCamera::TurnTableCamera(/*Transform & target, */Params const& params)
 
 //======================================================================================================================
 
-// void TurnTableCamera::ChangeTarget(Transform &target)
-// {
-//     _target = &target;
-// }
+void TurnTableCamera::ChangeTarget(Transform& target)
+{
+	_target = &target;
+}
 
 //======================================================================================================================
 
@@ -59,7 +59,8 @@ void TurnTableCamera::UpdateViewMatrix()
 
 		_position = glm::vec3(hRot * vRot * glm::vec4{ Math::ForwardVec3, 0.0f }) * _distance;
 
-		_viewMatrix = glm::lookAt(_position, glm::vec3{}, Math::UpVec3);
+		//_viewMatrix = glm::lookAt(_position, glm::vec3{}, Math::UpVec3);
+		_viewMatrix = glm::lookAt(_position, glm::vec3((*_target)[3]), Math::UpVec3);
 	}
 }
 

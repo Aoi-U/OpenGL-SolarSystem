@@ -61,6 +61,7 @@ private:
 	std::unique_ptr<Planet> sun{};
 	std::unique_ptr<Planet> earth{};
 	std::unique_ptr<Planet> moon{};
+	int lastSecond = 0;
 
 
 	std::unique_ptr<TurnTableCamera> mTurnTableCamera{};

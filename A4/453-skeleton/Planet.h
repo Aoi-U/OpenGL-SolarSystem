@@ -24,8 +24,11 @@ private:
 	
 	glm::mat4 mModel;
 
+
 public:
-	Planet(std::string texture, float orbitRadius, float scale, float orbitSpeed, float rotationSpeed, float tilt, float inclination, glm::vec3 centerOfOrbit);
+	int orbitCount = 0;
+	int rotationCount = 0;
+	Planet(std::string const& texture, float orbitRadius, float scale, float orbitSpeed, float rotationSpeed, float tilt, float inclination, glm::vec3 centerOfOrbit);
 
 	void updateCenterOfOrbit(glm::vec3 center) { mCenterOfOrbit = center; }
 	
@@ -42,6 +45,9 @@ public:
 	float getCurrentOrbit() const;
 	float getCurrentRotation() const;
 	glm::vec3 getCenterPosition() const;
+
+	// return a reference to the model matrix
+	glm::mat4& getModelRef() { return mModel; }
 
 	void update(float deltaTime);
 };
