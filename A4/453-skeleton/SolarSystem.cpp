@@ -33,6 +33,7 @@ SolarSystem::SolarSystem()
 	ImGui_ImplOpenGL3_Init("#version 330 core");
 
 	glEnable(GL_MULTISAMPLE);
+	glEnable(GL_DEPTH_TEST);
 	int samples = 0;
 	glGetIntegerv(GL_SAMPLES, &samples);
 	Log::info("MSAA Samples: {0}", samples);
