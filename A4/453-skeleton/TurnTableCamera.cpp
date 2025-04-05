@@ -107,3 +107,11 @@ void TurnTableCamera::ChangeRadius(float const deltaRadius)
 }
 
 //======================================================================================================================
+
+void TurnTableCamera::Reset()
+{
+	Params params{};
+	_distance = params.defaultDistance;
+	_minDistance = params.minDistance;
+	_maxDistance = params.maxDistance;
+}

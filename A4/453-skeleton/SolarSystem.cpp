@@ -56,12 +56,20 @@ SolarSystem::SolarSystem()
 	);
 
 	// all planets initial parameters are scaled relative to 365 seconds = one earth year, or 1 second = 1 day
-	background = std::make_unique<Planet>("textures/8k_stars_milky_way.jpg", 0.0f, 20.0f, 0.0f, 0.0f, 0.0f, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
-	sun = std::make_unique<Planet>("textures/2k_sun.jpg", 0.0f, 1.0f, 0.0f, 10.1f, 0.0f, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
-	earth = std::make_unique<Planet>("textures/2k_earth_daymap.jpg", 6.0f, 0.5f, 1.0f, 365.0f, 30.0f, 15.0f, sun->getPosition());
-	moon = std::make_unique<Planet>("textures/2k_moon.jpg", 1.0f, 0.2f, 13.4f, 13.4f, 20.0f, 10.0f, earth->getPosition());
+	background = std::make_unique<Planet>("textures/8k_stars_milky_way.jpg", 0.0f, 50.0f, 0.0f, 0.0f, 0.0f, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
 
-	mTurnTableCamera = std::make_unique<TurnTableCamera>(sun->getModel());
+	planets.emplace_back("textures/8k_sun.jpg", 0.0f, 1.0f, 0.0f, 13.5f, 0.0f, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
+	planets.emplace_back("textures/2k_mercury.jpg", 2.0f, 0.2f, 4.15f, 2.07f, 0.0f, 7.0f, planets[0].getPosition());
+	planets.emplace_back("textures/2k_venus_surface.jpg", 4.0f, 0.5f, 1.62f, 1.56f, 177.4f, 3.0f, planets[0].getPosition());
+	planets.emplace_back("textures/8k_earth_daymap.jpg", 6.0f, 0.5f, 1.0f, 365.0f, 30.0f, 15.0f, planets[0].getPosition());
+	planets.emplace_back("textures/2k_moon.jpg", 1.0f, 0.125f, 13.4f, 13.4f, 20.0f, 10.0f, planets[2].getPosition());
+	planets.emplace_back("textures/2k_mars.jpg", 8.0f, 0.25f, 0.53f, 365.0f, 25.2f, 1.85f, planets[0].getPosition());
+	planets.emplace_back("textures/2k_jupiter.jpg", 15.0f, 5.5f, 0.08f, 884.0f, 3.1f, 0.0f, planets[0].getPosition());
+	planets.emplace_back("textures/2k_saturn.jpg", 30.0f, 4.5f, 0.03f, 819.0f, 26.73f, 2.48f, planets[0].getPosition());
+	planets.emplace_back("textures/2k_uranus.jpg", 40.0f, 2.0f, 0.01f, 515.0f, 97.77f, 0.0f, planets[0].getPosition());
+	planets.emplace_back("textures/2k_neptune.jpg", 46.0f, 2.0f, 0.006f, 544.0f, 28.0f, 1.7f, planets[0].getPosition());
+
+	mTurnTableCamera = std::make_unique<TurnTableCamera>(planets[0].getModel());
 
 	// AXIS FOR DEBUG REMOVE LATER
 	CPU_Geometry xAxis{};
@@ -118,7 +126,13 @@ void SolarSystem::Run()
 		glfwPollEvents(); // Propagate events to the callback class
 
 		mTime->Update();
-		Update(mTime->DeltaTimeSec());
+		//Update(mTime->DeltaTimeSec());
+
+		float currTime = static_cast<float>(glfwGetTime());
+		float dt = currTime - prevTime;
+		prevTime = currTime;
+		Update(dt);
+
 
 		// glEnable(GL_FRAMEBUFFER_SRGB); // Expect Colour to be encoded in sRGB standard (as opposed to RGB)
 		//glClearColor(0.2f, 0.6f, 0.8f, 1.0f);
@@ -141,7 +155,6 @@ void SolarSystem::Run()
 		ImGui::Render(); // Render the ImGui window
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData()); // Some middleware thing
 
-		//mTurnTableCamera->ChangeTarget()
 
 		mWindow->swapBuffers(); // Swap the buffers while displaying the previous
 	}
@@ -166,45 +179,41 @@ void SolarSystem::Update(float const deltaTime)
 	mCursorPositionIsSetOnce = true;
 	mPreviousCursorPosition = cursorPosition;
 
-	switch (selectedTarget)
+	mTurnTableCamera->ChangeTarget(planets[selectedTarget].getModel());
+
+	if (playAnimation)
 	{
-	case 0:
-		mTurnTableCamera->ChangeTarget(sun->getModel());
-		break;
-	case 1:
-		mTurnTableCamera->ChangeTarget(earth->getModel());
-		break;
-	case 2:
-		mTurnTableCamera->ChangeTarget(moon->getModel());
-		break;
+		UpdatePlanets(deltaTime);
 	}
 
-	float currTime = static_cast<float>(glfwGetTime());
-	float changeInTime = currTime - prevTime;
-	//std::cout << "Current time: " << currTime << " Previous time: " << prevTime << " Change in time: " << changeInTime << std::endl;
-	prevTime = currTime;
-	// 1s = 1 day
-	UpdatePlanets(changeInTime);
-	//std::cout << "Current earth orbit: " << earth->getCurrentOrbit() << std::endl;
+	if (reset)
+	{
+		ResetDefaults();
+	}
 }
 
 void SolarSystem::UpdatePlanets(float time)
 {
-	sun->update(time);
-	earth->update(time);
-	moon->updateCenterOfOrbit(earth->getPosition());
-	moon->update(time);
-
-	// every second check earths orbit and rotation
-	if (lastSecond != static_cast<int>(glfwGetTime()))
+	for (size_t i = 0; i < planets.size(); i++)
 	{
-		lastSecond = static_cast<int>(glfwGetTime());
-		std::cout << "Earth orbit: " << earth->orbitCount << std::endl;
-		std::cout << "Earth rotation: " << earth->rotationCount << std::endl;
-		std::cout << "Sun rotation: " << sun->rotationCount << std::endl;
+		if (i == 4)
+		{
+			planets[i].updateCenterOfOrbit(planets[3].getPosition()); // update moons center of orbit to the earth
+		}
+		planets[i].update(time); // update all planets
 	}
+}
 
-
+void SolarSystem::ResetDefaults()
+{
+	for (Planet& planet : planets)
+	{
+		planet.Reset();
+	}
+	UpdatePlanets(0.0f);
+	selectedTarget = 0;
+	mTurnTableCamera->Reset();
+	mTurnTableCamera->ChangeTarget(planets[0].getModel());
 }
 
 //======================================================================================================================
@@ -231,53 +240,24 @@ void SolarSystem::Render()
 	mBackgroundSphereGeometry->bind();
 	glDrawArrays(GL_TRIANGLES, 0, mBackgroundSphereIndexCount);
 
-	// render sun
-	sun->getTexture()->bind();
-	auto const sunModel = sun->getModel();
-	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const*>(&sunModel));
-	mUnitSphereGeometry->bind();
-	glDrawArrays(GL_TRIANGLES, 0, mUnitSphereIndexCount);
-	
-	// DEBUG AXIS LINES
-	xAxisGPU->bind();
-	glDrawArrays(GL_LINES, 0, 2);
-	yAxisGPU->bind();
-	glDrawArrays(GL_LINES, 0, 2);
-	zAxisGPU->bind();
-	glDrawArrays(GL_LINES, 0, 2);
-	// END DEBUG
+	for (Planet& planet : planets)
+	{
+		// render planets
+		planet.getTexture()->bind();
+		auto const model = planet.getModel();
+		glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const*>(&model));
+		mUnitSphereGeometry->bind();
+		glDrawArrays(GL_TRIANGLES, 0, mUnitSphereIndexCount);
 
-	// render earth
-	earth->getTexture()->bind();
-	auto const earthModel = earth->getModel();
-	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const*>(&earthModel));
-	mUnitSphereGeometry->bind();
-	glDrawArrays(GL_TRIANGLES, 0, mUnitSphereIndexCount);
-
-	// DEBUG AXIS LINES
-	xAxisGPU->bind();
-	glDrawArrays(GL_LINES, 0, 2);
-	yAxisGPU->bind();
-	glDrawArrays(GL_LINES, 0, 2);
-	zAxisGPU->bind();
-	glDrawArrays(GL_LINES, 0, 2);
-	// END DEBUG
-
-	// render moon
-	moon->getTexture()->bind();
-	auto const moonModel = moon->getModel();
-	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const*>(&moonModel));
-	mUnitSphereGeometry->bind();
-	glDrawArrays(GL_TRIANGLES, 0, mUnitSphereIndexCount);
-
-	// DEBUG AXIS LINES
-	xAxisGPU->bind();
-	glDrawArrays(GL_LINES, 0, 2);
-	yAxisGPU->bind();
-	glDrawArrays(GL_LINES, 0, 2);
-	zAxisGPU->bind();
-	glDrawArrays(GL_LINES, 0, 2);
-	// END DEBUG
+		// DEBUG AXIS LINES
+		xAxisGPU->bind();
+		glDrawArrays(GL_LINES, 0, 2);
+		yAxisGPU->bind();
+		glDrawArrays(GL_LINES, 0, 2);
+		zAxisGPU->bind();
+		glDrawArrays(GL_LINES, 0, 2);
+		// END DEBUG
+	}
 	
 	// Hint: Use glDrawElements for using the index buffer (EBO)
 
@@ -290,6 +270,11 @@ void SolarSystem::UI()
 	ImGui::Begin("Options");
 	ImGui::Text("FPS: %f", 1.0f / mTime->DeltaTimeSec());
 	ImGui::Combo("Select planet target", &selectedTarget, planetsTarget, IM_ARRAYSIZE(planetsTarget));
+	if (ImGui::Button(playAnimation ? "Pause" : "Play"))
+	{
+		playAnimation = !playAnimation;
+	}
+	reset = ImGui::Button("Reset animation");
 	ImGui::End();
 
 }

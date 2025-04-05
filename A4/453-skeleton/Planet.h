@@ -7,6 +7,9 @@
 class Planet
 {
 private:
+	static constexpr float defaultRotation = 0.0f;
+	static constexpr float defaultOrbit = 0.0f;
+
 	std::shared_ptr<AssetPath> mPath;
 	std::unique_ptr<Texture> mTexture; // texture of the planet
 	const float mOrbitRadius; // radius of the orbit
@@ -20,7 +23,6 @@ private:
 	glm::vec3 mPosition; // position of the planet before inclination
 	float currentRotation; // current rotation of the planet 
 	float currentOrbit; // current orbit of the planet 
-	float currentIncline; // current incline factor
 	
 	glm::mat4 mModel; // model matrix
 
@@ -38,11 +40,11 @@ public:
 	glm::vec3 getPosition() const { return mModel[3]; }
 
 	float getRotation() const { return currentRotation; }
-	float getCurrentIncline() const { return currentIncline; }
 	float getCurrentOrbit() const { return currentOrbit; }
 	float getCurrentRotation() const { return currentRotation; }
 	glm::vec3 getCenterOfOrbit() const { return mCenterOfOrbit; }
 
 	void update(float deltaTime);
+	void Reset();
 };
 

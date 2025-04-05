@@ -11,7 +11,6 @@ Planet::Planet(std::string const& texture, float orbitRadius, float scale, float
 
 	currentRotation = 0.0f;
 	currentOrbit = 0.0f;
-	currentIncline = 1.0f; // initial incline scalar
 	mPosition = glm::vec3(orbitRadius * glm::cos(glm::radians(currentOrbit)), 0.0f, orbitRadius * glm::sin(glm::radians(currentOrbit))); // initial position of the planet
 	
 	update(0.0f); // update the model matrix
@@ -19,7 +18,7 @@ Planet::Planet(std::string const& texture, float orbitRadius, float scale, float
 
 void Planet::update(float time)
 {
-	// update the currnet incline of the planet
+	// update the current orbit and rotation of the planet
 	currentOrbit += mOrbitSpeed * time;
 	currentRotation += mRotationSpeed * time;	
 	if (currentOrbit > 360.0f)
@@ -33,7 +32,6 @@ void Planet::update(float time)
 		rotationCount++;
 	}
 
-	currentIncline = glm::cos(glm::radians(-currentOrbit)); // update the current incline scalar
 	mPosition.x = mOrbitRadius * glm::cos(glm::radians(-currentOrbit)); // update the position of the planet
 	mPosition.z = mOrbitRadius * glm::sin(glm::radians(-currentOrbit)); // update the position of the planet
 
@@ -45,4 +43,10 @@ void Planet::update(float time)
 	glm::mat4 matCenterPos = glm::translate(glm::mat4(1.0f), mCenterOfOrbit); // translation matrix to the center of the orbit
 
 	mModel = matCenterPos * matIncline * matPos * matNegIncline * matTilt * matRotation * mScale;
+}
+
+void Planet::Reset()
+{
+	currentRotation = defaultRotation;
+	currentOrbit = defaultOrbit;
 }

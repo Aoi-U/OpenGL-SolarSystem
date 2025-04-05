@@ -17,7 +17,7 @@ public:
 
 		float defaultDistance = 5.0f;
 		float minDistance = 1.0f;
-		float maxDistance = 20.0f;
+		float maxDistance = 30.0f;
 	};
 
 	// For the bonus camera needs to be able to follow a target
@@ -35,6 +35,8 @@ public:
 	void ChangePhi(float deltaPhi);
 
 	void ChangeRadius(float deltaRadius);
+
+	void Reset();
 
 	[[nodiscard]]
 	glm::mat4 ViewMatrix();

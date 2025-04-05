@@ -25,6 +25,8 @@ private:
 
 	void UpdatePlanets(float deltaTime);
 
+	void ResetDefaults();
+
 	void Render();
 
 	void UI();
@@ -58,11 +60,11 @@ private:
 	int mBackgroundSphereIndexCount{};
 
 	std::unique_ptr<Planet> background{};
-	std::unique_ptr<Planet> sun{};
-	std::unique_ptr<Planet> earth{};
-	std::unique_ptr<Planet> moon{};
-	int lastSecond = 0;
 
+	std::vector<Planet> planets{};
+	//std::unique_ptr<Planet> sun{};
+	//std::unique_ptr<Planet> earth{};
+	//std::unique_ptr<Planet> moon{};
 
 	std::unique_ptr<TurnTableCamera> mTurnTableCamera{};
 	glm::dvec2 mPreviousCursorPosition{};
@@ -80,6 +82,8 @@ private:
 
 
 	// GUI stuff
-	const char* planetsTarget[3]{ "Sun", "Earth", "Moon" };
+	const char* planetsTarget[10]{ "Sun", "Mercury", "Venus", "Earth", "Moon", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune" };
 	int selectedTarget = 0;
+	bool playAnimation = true;
+	bool reset = false;
 };
