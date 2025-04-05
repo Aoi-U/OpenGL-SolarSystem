@@ -183,7 +183,7 @@ void SolarSystem::Update(float const deltaTime)
 
 	if (playAnimation)
 	{
-		UpdatePlanets(deltaTime);
+		UpdatePlanets(deltaTime * timeScale);
 	}
 
 	if (reset)
@@ -275,6 +275,7 @@ void SolarSystem::UI()
 		playAnimation = !playAnimation;
 	}
 	reset = ImGui::Button("Reset animation");
+	ImGui::SliderFloat("Time scale", &timeScale, -100.0f, 100.0f);
 	ImGui::End();
 
 }

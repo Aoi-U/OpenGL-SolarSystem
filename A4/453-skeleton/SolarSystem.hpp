@@ -86,4 +86,5 @@ private:
 	int selectedTarget = 0;
 	bool playAnimation = true;
 	bool reset = false;
+	float timeScale = 1.0f;
 };
