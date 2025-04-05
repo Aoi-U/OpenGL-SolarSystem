@@ -42,9 +42,7 @@ void Planet::update(float time)
 	glm::mat4 matIncline = glm::rotate(glm::mat4(1.0f), glm::radians(mInclination), glm::vec3(0.0f, 0.0f, 1.0f));
 	glm::mat4 matNegIncline = glm::rotate(glm::mat4(1.0f), glm::radians(-mInclination), glm::vec3(0.0f, 0.0f, 1.0f));
 	glm::mat4 matRotation = glm::rotate(glm::mat4(1.0f), glm::radians(currentRotation), glm::vec3(0.0f, 1.0f, 0.0f)); // rotation matrix
-	glm::vec3 centerPos = mCenterOfOrbit; // get the center position of the planet
-	glm::mat4 matCenterPos = glm::translate(glm::mat4(1.0f), centerPos); // translation matrix to the center of the orbit
+	glm::mat4 matCenterPos = glm::translate(glm::mat4(1.0f), mCenterOfOrbit); // translation matrix to the center of the orbit
 
-	//mModel = matTilt * matCenterPos * matIncline * matPos * matNegIncline * matRotation * mScale;
 	mModel = matCenterPos * matIncline * matPos * matNegIncline * matTilt * matRotation * mScale;
 }

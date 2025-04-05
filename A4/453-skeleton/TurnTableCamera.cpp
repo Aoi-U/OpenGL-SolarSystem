@@ -27,9 +27,7 @@ TurnTableCamera::TurnTableCamera(Transform& target, Params const& params)
 
 void TurnTableCamera::ChangeTarget(Transform& target)
 {
-
 	_target = &target;
-
 	_isDirty = true;
 }
 
@@ -60,10 +58,11 @@ void TurnTableCamera::UpdateViewMatrix()
 		auto const hRot = glm::rotate(glm::mat4(1.0f), _theta, Math::UpVec3);
 		auto const vRot = glm::rotate(glm::mat4(1.0f), _phi, Math::RightVec3);
 
-		_position = glm::vec3(hRot * vRot * glm::vec4{ Math::ForwardVec3, 0.0f }) * _distance;
+		//_position = glm::vec3(hRot * vRot * glm::vec4{ Math::ForwardVec3, 0.0f }) * _distance;
+		_position = glm::vec3(hRot * vRot * glm::vec4{ Math::ForwardVec3, 0.0f }) * _distance + glm::vec3((*_target)[3]);
 
-		//_viewMatrix = glm::lookAt(_position, glm::vec3{}, Math::UpVec3);
-		_viewMatrix = glm::lookAt(_position, glm::vec3((*_target)[3]), Math::UpVec3);
+		auto center = glm::vec3((*_target)[3]);
+		_viewMatrix = glm::lookAt(_position, center, Math::UpVec3);
 	}
 }
 

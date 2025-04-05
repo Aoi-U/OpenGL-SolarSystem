@@ -55,12 +55,12 @@ SolarSystem::SolarSystem()
 	);
 
 	// all planets initial parameters are scaled relative to 365 seconds = one earth year, or 1 second = 1 day
-	background = std::make_unique<Planet>("textures/2k_stars_milky_way.jpg", 0.0f, 500.0f, 0.0f, 0.0f, 0.0f, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
+	background = std::make_unique<Planet>("textures/8k_stars_milky_way.jpg", 0.0f, 20.0f, 0.0f, 0.0f, 0.0f, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
 	sun = std::make_unique<Planet>("textures/2k_sun.jpg", 0.0f, 1.0f, 0.0f, 10.1f, 0.0f, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
 	earth = std::make_unique<Planet>("textures/2k_earth_daymap.jpg", 6.0f, 0.5f, 1.0f, 365.0f, 30.0f, 15.0f, sun->getPosition());
-	moon = std::make_unique<Planet>("textures/2k_moon.jpg", 1.0f, 0.2f, 13.4f, 13.4f, 20.0f, 10.0f, earth->getPosition() );
+	moon = std::make_unique<Planet>("textures/2k_moon.jpg", 1.0f, 0.2f, 13.4f, 13.4f, 20.0f, 10.0f, earth->getPosition());
 
-	mTurnTableCamera = std::make_unique<TurnTableCamera>(sun->getModelRef());
+	mTurnTableCamera = std::make_unique<TurnTableCamera>(sun->getModel());
 
 	// AXIS FOR DEBUG REMOVE LATER
 	CPU_Geometry xAxis{};
@@ -168,16 +168,13 @@ void SolarSystem::Update(float const deltaTime)
 	switch (selectedTarget)
 	{
 	case 0:
-		mTurnTableCamera->ChangeTarget(sun->getModelRef());
+		mTurnTableCamera->ChangeTarget(sun->getModel());
 		break;
 	case 1:
-		mTurnTableCamera->ChangeTarget(earth->getModelRef());
+		mTurnTableCamera->ChangeTarget(earth->getModel());
 		break;
 	case 2:
-		mTurnTableCamera->ChangeTarget(moon->getModelRef());
-		break;
-	default:
-		mTurnTableCamera->ChangeTarget(sun->getModelRef());
+		mTurnTableCamera->ChangeTarget(moon->getModel());
 		break;
 	}
 

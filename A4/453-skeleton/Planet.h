@@ -15,9 +15,9 @@ private:
 	const float mTilt; // tilt of the planet
 	const float mInclination; // inclination of the planet
 
-	glm::mat4 mScale; // scale matrix
-	glm::vec3 mCenterOfOrbit; // center of orbit
-	glm::vec3 mPosition; // position of the planet
+	glm::mat4 mScale; // size of planet
+	glm::vec3 mCenterOfOrbit; // center of the planets orbit
+	glm::vec3 mPosition; // position of the planet before inclination
 	float currentRotation; // current rotation of the planet 
 	float currentOrbit; // current orbit of the planet 
 	float currentIncline; // current incline factor
@@ -33,7 +33,7 @@ public:
 	
 	Texture* getTexture() const { return mTexture.get(); }
 
-	glm::mat4 getModel() const { return mModel; }
+	glm::mat4& getModel() { return mModel; }
 
 	glm::vec3 getPosition() const { return mModel[3]; }
 
@@ -42,9 +42,6 @@ public:
 	float getCurrentOrbit() const { return currentOrbit; }
 	float getCurrentRotation() const { return currentRotation; }
 	glm::vec3 getCenterOfOrbit() const { return mCenterOfOrbit; }
-
-	// return model matrix by reference
-	glm::mat4& getModelRef() { return mModel; }
 
 	void update(float deltaTime);
 };
