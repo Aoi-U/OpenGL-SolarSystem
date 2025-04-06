@@ -49,6 +49,7 @@ SolarSystem::SolarSystem()
 
 	PrepareUnitSphereGeometry();
 	PrepareBackgroundSphereGeometry();
+	PrepareSaturnRingGeometry();
 
 	mBasicShader = std::make_unique<ShaderProgram>(
 		mPath->Get("shaders/test.vert"),
@@ -68,6 +69,8 @@ SolarSystem::SolarSystem()
 	planets.emplace_back("textures/2k_saturn.jpg", 30.0f, 4.5f, 0.03f, 819.0f, 26.73f, 2.48f, planets[0].getPosition());
 	planets.emplace_back("textures/2k_uranus.jpg", 40.0f, 2.0f, 0.01f, 515.0f, 97.77f, 0.0f, planets[0].getPosition());
 	planets.emplace_back("textures/2k_neptune.jpg", 46.0f, 2.0f, 0.006f, 544.0f, 28.0f, 1.7f, planets[0].getPosition());
+
+	mSaturnRingTexture = std::make_unique<Texture>(mPath->Get("textures/2k_saturn_ring_alpha.png"), GL_NEAREST);
 
 	mTurnTableCamera = std::make_unique<TurnTableCamera>(planets[0].getModel());
 
@@ -258,6 +261,22 @@ void SolarSystem::Render()
 		glDrawArrays(GL_LINES, 0, 2);
 		// END DEBUG
 	}
+
+	// render saturn ring
+	mSaturnRingTexture->bind();
+	auto ringModel = planets[7].getModel();
+	ringModel = glm::scale(ringModel, glm::vec3(1.4f, 0.0f, 1.4f));
+	//ringModel = glm::rotate(ringModel, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const*>(&ringModel));
+	mSaturnRingGeometry->bind();
+	glDrawArrays(GL_TRIANGLES, 0, mSaturnRingIndexCount);
+	ringModel = glm::rotate(ringModel, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	ringModel = glm::rotate(ringModel, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const*>(&ringModel));
+	mSaturnRingGeometry->bind();
+	glDrawArrays(GL_TRIANGLES, 0, mSaturnRingIndexCount);
+	
+	
 	
 	// Hint: Use glDrawElements for using the index buffer (EBO)
 
@@ -299,6 +318,14 @@ void SolarSystem::PrepareBackgroundSphereGeometry()
 	auto const backgroundSphere = ShapeGenerator::BackgroundSphere(1.0f, 100, 100);
 	mBackgroundSphereGeometry->Update(backgroundSphere);
 	mBackgroundSphereIndexCount = static_cast<int>(backgroundSphere.positions.size());
+}
+
+void SolarSystem::PrepareSaturnRingGeometry()
+{
+	mSaturnRingGeometry = std::make_unique<GPU_Geometry>();
+	auto const saturnRing = ShapeGenerator::Ring(1.0f, 0.2f, 100);
+	mSaturnRingGeometry->Update(saturnRing);
+	mSaturnRingIndexCount = static_cast<int>(saturnRing.positions.size());
 }
 
 //======================================================================================================================

@@ -35,6 +35,8 @@ private:
 
 	void PrepareBackgroundSphereGeometry();
 
+	void PrepareSaturnRingGeometry();
+
 	void OnResize(int width, int height);
 
 	void OnMouseWheelChange(double xOffset, double yOffset) const;
@@ -62,6 +64,10 @@ private:
 	std::unique_ptr<Planet> background{};
 
 	std::vector<Planet> planets{};
+
+	std::unique_ptr<Texture> mSaturnRingTexture{};
+	std::unique_ptr<GPU_Geometry> mSaturnRingGeometry{};
+	int mSaturnRingIndexCount{};
 	//std::unique_ptr<Planet> sun{};
 	//std::unique_ptr<Planet> earth{};
 	//std::unique_ptr<Planet> moon{};

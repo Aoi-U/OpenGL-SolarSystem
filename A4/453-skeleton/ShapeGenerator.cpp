@@ -108,6 +108,99 @@ CPU_Geometry ShapeGenerator::BackgroundSphere(float const radius, int const slic
 	return geom;
 }
 
+CPU_Geometry ShapeGenerator::Ring(float radius, float width, float resolution)
+{
+	CPU_Geometry geom{};
+
+	// generate a single curve to be revolved
+	std::vector<glm::vec3> outerRing{};
+	std::vector < glm::vec3 > innerRing{};
+
+	for (float u = 0; u < glm::two_pi<float>(); u += glm::two_pi<float>() / resolution)
+	{
+		outerRing.emplace_back(radius * glm::sin(u), 0.0f, radius * glm::cos(u));
+		innerRing.emplace_back((radius - width) * glm::sin(u), 0.0f, (radius - width) * glm::cos(u));
+	}
+
+	// guarantee a section at the end
+	outerRing.emplace_back(radius * glm::sin(glm::two_pi<float>()), radius * glm::cos(glm::two_pi<float>()), 0.0f);
+	innerRing.emplace_back((radius - width) * glm::sin(glm::two_pi<float>()), (radius - width) * glm::cos(glm::two_pi<float>()), 0.0f);
+
+	for (size_t i = 0; i < outerRing.size() - 1; i++)
+	{
+		glm::vec3 pOne = outerRing[i]; // outer left
+		glm::vec3 pTwo = outerRing[i + 1]; // outer right
+		glm::vec3 pThree = innerRing[i]; // inner left
+		glm::vec3 pFour = innerRing[i + 1]; // inner right
+
+		geom.positions.push_back(pOne);
+		geom.positions.push_back(pTwo);
+		geom.positions.push_back(pThree);
+		geom.colors.emplace_back(0.f, 1.f, 1.f);
+		geom.colors.emplace_back(0.f, 1.f, 1.f); 
+		geom.colors.emplace_back(0.f, 1.f, 1.f);
+
+		geom.positions.push_back(pTwo);
+		geom.positions.push_back(pFour);
+		geom.positions.push_back(pThree);
+		geom.colors.emplace_back(0.f, 1.f, 1.f);
+		geom.colors.emplace_back(0.f, 1.f, 1.f);
+		geom.colors.emplace_back(0.f, 1.f, 1.f);
+
+		// add the normals to the geometry
+		geom.normals.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
+		geom.normals.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
+		geom.normals.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
+		geom.normals.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
+		geom.normals.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
+		geom.normals.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
+
+		// calculate the texture coordinates
+		geom.uvs.emplace_back(static_cast<float>(i) / static_cast<float>(resolution), 1.0f - static_cast<float>(i) / static_cast<float>(resolution)); // outer left
+		geom.uvs.emplace_back(static_cast<float>(i + 1) / static_cast<float>(resolution), 1.0f - static_cast<float>(i + 1) / static_cast<float>(resolution)); // outer right
+		geom.uvs.emplace_back(static_cast<float>(i) / static_cast<float>(resolution), 1.0f - static_cast<float>(i) / static_cast<float>(resolution)); // inner left
+		geom.uvs.emplace_back(static_cast<float>(i + 1) / static_cast<float>(resolution), 1.0f - static_cast<float>(i + 1) / static_cast<float>(resolution)); // outer right
+		geom.uvs.emplace_back(static_cast<float>(i + 1) / static_cast<float>(resolution), 1.0f - static_cast<float>(i + 1) / static_cast<float>(resolution)); // inner right
+		geom.uvs.emplace_back(static_cast<float>(i) / static_cast<float>(resolution), 1.0f - static_cast<float>(i) / static_cast<float>(resolution)); // inner left
+	}
+
+	glm::vec3 pOne = outerRing[outerRing.size() - 1]; // outer left
+	glm::vec3 pTwo = outerRing[0]; // outer right
+	glm::vec3 pThree = innerRing[innerRing.size() - 1]; // inner left
+	glm::vec3 pFour = innerRing[0]; // inner right
+
+	geom.positions.push_back(pOne);
+	geom.positions.push_back(pTwo);
+	geom.positions.push_back(pThree);
+	geom.colors.emplace_back(0.f, 1.f, 1.f);
+	geom.colors.emplace_back(0.f, 1.f, 1.f);
+	geom.colors.emplace_back(0.f, 1.f, 1.f);
+
+	geom.positions.push_back(pTwo);
+	geom.positions.push_back(pFour);
+	geom.positions.push_back(pThree);
+	geom.colors.emplace_back(0.f, 1.f, 1.f);
+	geom.colors.emplace_back(0.f, 1.f, 1.f);
+	geom.colors.emplace_back(0.f, 1.f, 1.f);
+	// add the normals to the geometry
+	geom.normals.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
+	geom.normals.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
+	geom.normals.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
+	geom.normals.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
+	geom.normals.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
+	geom.normals.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
+
+	// calculate the texture coordinates
+	geom.uvs.emplace_back(static_cast<float>(outerRing.size() - 1) / static_cast<float>(resolution), 1.0f - static_cast<float>(outerRing.size() - 1) / static_cast<float>(resolution)); // outer left
+	geom.uvs.emplace_back(static_cast<float>(0) / static_cast<float>(resolution), 1.0f - static_cast<float>(0) / static_cast<float>(resolution)); // outer right
+	geom.uvs.emplace_back(static_cast<float>(outerRing.size() - 1) / static_cast<float>(resolution), 1.0f - static_cast<float>(outerRing.size() - 1) / static_cast<float>(resolution)); // inner left
+	geom.uvs.emplace_back(static_cast<float>(0) / static_cast<float>(resolution), 1.0f - static_cast<float>(0) / static_cast<float>(resolution)); // outer right
+	geom.uvs.emplace_back(static_cast<float>(0) / static_cast<float>(resolution), 1.0f - static_cast<float>(0) / static_cast<float>(resolution)); // inner right
+	geom.uvs.emplace_back(static_cast<float>(outerRing.size() - 1) / static_cast<float>(resolution), 1.0f - static_cast<float>(outerRing.size() - 1) / static_cast<float>(resolution)); // inner left
+	
+	return geom;
+}
+
 std::vector<std::vector< glm::vec3 >> ShapeGenerator::GenerateSphere(float radius, int slices, int stacks)
 {
 	std::vector<std::vector<glm::vec3>> positions{};
@@ -119,7 +212,8 @@ std::vector<std::vector< glm::vec3 >> ShapeGenerator::GenerateSphere(float radiu
 	}
 	// guarantee the section at the bottom
 	singleCurve.emplace_back(0.0f, -radius, 0.0f);
-	// generate a surface of revolution
+
+	// generate a sphere via surface of revolution
 	for (float u = 0; u < glm::two_pi<float>(); u += glm::two_pi<float>() / slices)
 	{
 		std::vector<glm::vec3> curve{};
