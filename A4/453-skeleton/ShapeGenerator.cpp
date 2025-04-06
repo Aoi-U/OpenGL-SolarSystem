@@ -113,18 +113,18 @@ CPU_Geometry ShapeGenerator::Ring(float radius, float width, float resolution)
 	CPU_Geometry geom{};
 
 	// generate a single curve to be revolved
-	std::vector<glm::vec3> outerRing{};
 	std::vector < glm::vec3 > innerRing{};
+	std::vector<glm::vec3> outerRing{};
 
 	for (float u = 0; u < glm::two_pi<float>(); u += glm::two_pi<float>() / resolution)
 	{
-		outerRing.emplace_back(radius * glm::sin(u), 0.0f, radius * glm::cos(u));
-		innerRing.emplace_back((radius - width) * glm::sin(u), 0.0f, (radius - width) * glm::cos(u));
+		innerRing.emplace_back(radius * glm::cos(u), 0.0f, radius * glm::sin(u));
+		outerRing.emplace_back((radius + width) * glm::cos(u), 0.0f, (radius + width) * glm::sin(u));
 	}
 
 	// guarantee a section at the end
-	outerRing.emplace_back(radius * glm::sin(glm::two_pi<float>()), radius * glm::cos(glm::two_pi<float>()), 0.0f);
-	innerRing.emplace_back((radius - width) * glm::sin(glm::two_pi<float>()), (radius - width) * glm::cos(glm::two_pi<float>()), 0.0f);
+	innerRing.emplace_back(radius * glm::cos(glm::two_pi<float>()), 0.0f, radius * glm::sin(glm::two_pi<float>()));
+	outerRing.emplace_back((radius + width) * glm::cos(glm::two_pi<float>()), 0.0f, (radius + width) * glm::sin(glm::two_pi<float>()));
 
 	for (size_t i = 0; i < outerRing.size() - 1; i++)
 	{

@@ -270,7 +270,7 @@ void SolarSystem::Render()
 	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const*>(&ringModel));
 	mSaturnRingGeometry->bind();
 	glDrawArrays(GL_TRIANGLES, 0, mSaturnRingIndexCount);
-	ringModel = glm::rotate(ringModel, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	ringModel = glm::rotate(ringModel, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 	ringModel = glm::rotate(ringModel, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const*>(&ringModel));
 	mSaturnRingGeometry->bind();
