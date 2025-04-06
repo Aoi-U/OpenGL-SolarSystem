@@ -11,7 +11,7 @@ namespace ShapeGenerator
 	// does the same as Sphere() but in opposite winding order so the textures can properly load on the inside of the sphere
 	CPU_Geometry BackgroundSphere(float radius, int slices, int stacks); 
 
-	CPU_Geometry Ring(float radius, float width, float resolution);
+	CPU_Geometry Ring(float radius, float width, int resolution);
 
 	CPU_Geometry UnitCube();
 

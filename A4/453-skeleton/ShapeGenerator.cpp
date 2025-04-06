@@ -14,13 +14,18 @@ CPU_Geometry ShapeGenerator::Sphere(float const radius, int const slices, int co
 	std::vector<std::vector<glm::vec3>> positions = GenerateSphere(radius, slices, stacks);
 	
 	CPU_Geometry geom{};
+
+	glm::vec3 pOne; // top left
+	glm::vec3 pTwo; // bottom left
+	glm::vec3 pThree; // bottom right
+	glm::vec3 pFour; // top right
 	// triangulate each section and add it to the geometry
 	for (size_t i = 0; i < positions.size() - 1; i++) {
 		for (size_t j = 0; j < positions[i].size() - 1; j++) {
-			glm::vec3 pOne = positions[i][j]; // top left
-			glm::vec3 pTwo = positions[i][j + 1]; // bottom left
-			glm::vec3 pThree = positions[i + 1][j + 1]; // bottom right
-			glm::vec3 pFour = positions[i + 1][j]; // top right
+			pOne = positions[i][j]; // top left
+			pTwo = positions[i][j + 1]; // bottom left
+			pThree = positions[i + 1][j + 1]; // bottom right
+			pFour = positions[i + 1][j]; // top right
 
 			geom.positions.push_back(pOne); // top left
 			geom.positions.push_back(pThree); // bottom right
@@ -64,13 +69,18 @@ CPU_Geometry ShapeGenerator::BackgroundSphere(float const radius, int const slic
 	std::vector<std::vector<glm::vec3>> positions = GenerateSphere(radius, slices, stacks);
 
 	CPU_Geometry geom{};
+
+	glm::vec3 pOne; // top left
+	glm::vec3 pTwo; // bottom left
+	glm::vec3 pThree; // bottom right
+	glm::vec3 pFour; // top right
 	// triangulate each section and add it to the geometry
 	for (size_t i = 0; i < positions.size() - 1; i++) {
 		for (size_t j = 0; j < positions[i].size() - 1; j++) {
-			glm::vec3 pOne = positions[i][j]; // top left
-			glm::vec3 pTwo = positions[i][j + 1]; // bottom left
-			glm::vec3 pThree = positions[i + 1][j + 1]; // bottom right
-			glm::vec3 pFour = positions[i + 1][j]; // top right
+			pOne = positions[i][j]; // top left
+			pTwo = positions[i][j + 1]; // bottom left
+			pThree = positions[i + 1][j + 1]; // bottom right
+			pFour = positions[i + 1][j]; // top right
 
 			geom.positions.push_back(pThree); // bottom right
 			geom.positions.push_back(pOne); // top left
@@ -108,7 +118,7 @@ CPU_Geometry ShapeGenerator::BackgroundSphere(float const radius, int const slic
 	return geom;
 }
 
-CPU_Geometry ShapeGenerator::Ring(float radius, float width, float resolution)
+CPU_Geometry ShapeGenerator::Ring(float radius, float width, int resolution)
 {
 	CPU_Geometry geom{};
 
@@ -126,12 +136,16 @@ CPU_Geometry ShapeGenerator::Ring(float radius, float width, float resolution)
 	innerRing.emplace_back(radius * glm::cos(glm::two_pi<float>()), 0.0f, radius * glm::sin(glm::two_pi<float>()));
 	outerRing.emplace_back((radius + width) * glm::cos(glm::two_pi<float>()), 0.0f, (radius + width) * glm::sin(glm::two_pi<float>()));
 
+	glm::vec3 pOne; // outer left
+	glm::vec3 pTwo; // outer right
+	glm::vec3 pThree; // inner left
+	glm::vec3 pFour; // inner right
 	for (size_t i = 0; i < outerRing.size() - 1; i++)
 	{
-		glm::vec3 pOne = outerRing[i]; // outer left
-		glm::vec3 pTwo = outerRing[i + 1]; // outer right
-		glm::vec3 pThree = innerRing[i]; // inner left
-		glm::vec3 pFour = innerRing[i + 1]; // inner right
+		pOne = outerRing[i]; // outer left
+		pTwo = outerRing[i + 1]; // outer right
+		pThree = innerRing[i]; // inner left
+		pFour = innerRing[i + 1]; // inner right
 
 		geom.positions.push_back(pOne);
 		geom.positions.push_back(pTwo);
@@ -164,10 +178,10 @@ CPU_Geometry ShapeGenerator::Ring(float radius, float width, float resolution)
 		geom.uvs.emplace_back(static_cast<float>(i) / static_cast<float>(resolution), 1.0f - static_cast<float>(i) / static_cast<float>(resolution)); // inner left
 	}
 
-	glm::vec3 pOne = outerRing[outerRing.size() - 1]; // outer left
-	glm::vec3 pTwo = outerRing[0]; // outer right
-	glm::vec3 pThree = innerRing[innerRing.size() - 1]; // inner left
-	glm::vec3 pFour = innerRing[0]; // inner right
+	pOne = outerRing[outerRing.size() - 1]; // outer left
+	pTwo = outerRing[0]; // outer right
+	pThree = innerRing[innerRing.size() - 1]; // inner left
+	pFour = innerRing[0]; // inner right
 
 	geom.positions.push_back(pOne);
 	geom.positions.push_back(pTwo);
