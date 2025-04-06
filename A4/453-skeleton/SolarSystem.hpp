@@ -55,6 +55,8 @@ private:
 	std::unique_ptr<ShaderProgram> mBasicShader{};
 	std::unique_ptr<Texture> mTexture{};
 
+	glm::mat4 mLightModel;
+
 	std::unique_ptr<GPU_Geometry> mUnitSphereGeometry{};
 	int mUnitSphereIndexCount{};
 

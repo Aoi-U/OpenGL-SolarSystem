@@ -74,6 +74,10 @@ SolarSystem::SolarSystem()
 
 	mTurnTableCamera = std::make_unique<TurnTableCamera>(planets[0].getModel());
 
+	mLightModel = glm::mat4(1.0f);
+	mLightModel = glm::translate(mLightModel, glm::vec3(0.0f, 0.0f, 0.0f));
+	mLightModel = glm::scale(mLightModel, glm::vec3(0.2f));
+
 	// AXIS FOR DEBUG REMOVE LATER
 	CPU_Geometry xAxis{};
 	CPU_Geometry yAxis{};
@@ -235,6 +239,16 @@ void SolarSystem::Render()
 
 	auto const view = mTurnTableCamera->ViewMatrix();
 	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "view"), 1, GL_FALSE, reinterpret_cast<float const*>(&view));
+
+	// render point light
+	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const*>(&mLightModel));
+	auto pos = glGetUniformLocation(*mBasicShader, "lightColor");
+	glUniform3f(pos, 1.0f, 1.0f, 1.0f);
+	pos = glGetUniformLocation(*mBasicShader, "lightPos");
+	glUniform3f(pos, 0.0f, 0.0f, 0.0f);
+	pos = glGetUniformLocation(*mBasicShader, "viewPos");
+	glUniform3f(pos, mTurnTableCamera->Position().x, mTurnTableCamera->Position().y, mTurnTableCamera->Position().z);
+	glDrawArrays(GL_POINTS, 0, 1);
 
 	// render background
 	background->getTexture()->bind();
