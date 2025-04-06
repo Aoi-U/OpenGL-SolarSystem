@@ -133,30 +133,32 @@ CPU_Geometry ShapeGenerator::Ring(float radius, float width, int resolution)
 	}
 
 	// guarantee a section at the end
-	innerRing.emplace_back(radius * glm::cos(glm::two_pi<float>()), 0.0f, radius * glm::sin(glm::two_pi<float>()));
-	outerRing.emplace_back((radius + width) * glm::cos(glm::two_pi<float>()), 0.0f, (radius + width) * glm::sin(glm::two_pi<float>()));
+	innerRing.emplace_back(radius, 0.0f,  0.0f);
+	outerRing.emplace_back((radius + width) * glm::cos(glm::two_pi<float>()), 0.0f, 0.0f);
 
-	glm::vec3 pOne; // outer left
-	glm::vec3 pTwo; // outer right
-	glm::vec3 pThree; // inner left
-	glm::vec3 pFour; // inner right
+	glm::vec3 pOne; // outer first
+	glm::vec3 pTwo; // outer second
+	glm::vec3 pThree; // inner first
+	glm::vec3 pFour; // inner second
+	float uv;
+	float uv2;
 	for (size_t i = 0; i < outerRing.size() - 1; i++)
 	{
-		pOne = outerRing[i]; // outer left
-		pTwo = outerRing[i + 1]; // outer right
-		pThree = innerRing[i]; // inner left
-		pFour = innerRing[i + 1]; // inner right
+		pOne = outerRing[i]; // outer first
+		pTwo = outerRing[i + 1]; // outer second
+		pThree = innerRing[i]; // inner first
+		pFour = innerRing[i + 1]; // inner second
 
 		geom.positions.push_back(pOne);
-		geom.positions.push_back(pTwo);
 		geom.positions.push_back(pThree);
+		geom.positions.push_back(pTwo);
 		geom.colors.emplace_back(0.f, 1.f, 1.f);
 		geom.colors.emplace_back(0.f, 1.f, 1.f); 
 		geom.colors.emplace_back(0.f, 1.f, 1.f);
 
 		geom.positions.push_back(pTwo);
-		geom.positions.push_back(pFour);
 		geom.positions.push_back(pThree);
+		geom.positions.push_back(pFour);
 		geom.colors.emplace_back(0.f, 1.f, 1.f);
 		geom.colors.emplace_back(0.f, 1.f, 1.f);
 		geom.colors.emplace_back(0.f, 1.f, 1.f);
@@ -169,30 +171,34 @@ CPU_Geometry ShapeGenerator::Ring(float radius, float width, int resolution)
 		geom.normals.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
 		geom.normals.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
 
+		uv = static_cast<float>(i) / static_cast<float>(resolution);
+		uv2 = static_cast<float>(i + 1) / static_cast<float>(resolution);
+
 		// calculate the texture coordinates
-		geom.uvs.emplace_back(static_cast<float>(i) / static_cast<float>(resolution), 1.0f - static_cast<float>(i) / static_cast<float>(resolution)); // outer left
-		geom.uvs.emplace_back(static_cast<float>(i + 1) / static_cast<float>(resolution), 1.0f - static_cast<float>(i + 1) / static_cast<float>(resolution)); // outer right
-		geom.uvs.emplace_back(static_cast<float>(i) / static_cast<float>(resolution), 1.0f - static_cast<float>(i) / static_cast<float>(resolution)); // inner left
-		geom.uvs.emplace_back(static_cast<float>(i + 1) / static_cast<float>(resolution), 1.0f - static_cast<float>(i + 1) / static_cast<float>(resolution)); // outer right
-		geom.uvs.emplace_back(static_cast<float>(i + 1) / static_cast<float>(resolution), 1.0f - static_cast<float>(i + 1) / static_cast<float>(resolution)); // inner right
-		geom.uvs.emplace_back(static_cast<float>(i) / static_cast<float>(resolution), 1.0f - static_cast<float>(i) / static_cast<float>(resolution)); // inner left
+		geom.uvs.emplace_back(1.0f, uv); // outer first
+		geom.uvs.emplace_back(0.0f, uv); // inner first
+		geom.uvs.emplace_back(1.0f, uv2); // outer second
+		geom.uvs.emplace_back(1.0f, uv2); // outer second
+		geom.uvs.emplace_back(0.0f, uv); // inner first
+		geom.uvs.emplace_back(0.0f, uv2); // inner second
+
 	}
 
-	pOne = outerRing[outerRing.size() - 1]; // outer left
-	pTwo = outerRing[0]; // outer right
-	pThree = innerRing[innerRing.size() - 1]; // inner left
-	pFour = innerRing[0]; // inner right
+	pOne = outerRing[outerRing.size() - 1]; // outer first
+	pTwo = outerRing[0]; // outer second
+	pThree = innerRing[innerRing.size() - 1]; // inner first
+	pFour = innerRing[0]; // inner second
 
 	geom.positions.push_back(pOne);
-	geom.positions.push_back(pTwo);
 	geom.positions.push_back(pThree);
+	geom.positions.push_back(pTwo);
 	geom.colors.emplace_back(0.f, 1.f, 1.f);
 	geom.colors.emplace_back(0.f, 1.f, 1.f);
 	geom.colors.emplace_back(0.f, 1.f, 1.f);
 
 	geom.positions.push_back(pTwo);
-	geom.positions.push_back(pFour);
 	geom.positions.push_back(pThree);
+	geom.positions.push_back(pFour);
 	geom.colors.emplace_back(0.f, 1.f, 1.f);
 	geom.colors.emplace_back(0.f, 1.f, 1.f);
 	geom.colors.emplace_back(0.f, 1.f, 1.f);
@@ -205,13 +211,16 @@ CPU_Geometry ShapeGenerator::Ring(float radius, float width, int resolution)
 	geom.normals.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
 
 	// calculate the texture coordinates
-	geom.uvs.emplace_back(static_cast<float>(outerRing.size() - 1) / static_cast<float>(resolution), 1.0f - static_cast<float>(outerRing.size() - 1) / static_cast<float>(resolution)); // outer left
-	geom.uvs.emplace_back(static_cast<float>(0) / static_cast<float>(resolution), 1.0f - static_cast<float>(0) / static_cast<float>(resolution)); // outer right
-	geom.uvs.emplace_back(static_cast<float>(outerRing.size() - 1) / static_cast<float>(resolution), 1.0f - static_cast<float>(outerRing.size() - 1) / static_cast<float>(resolution)); // inner left
-	geom.uvs.emplace_back(static_cast<float>(0) / static_cast<float>(resolution), 1.0f - static_cast<float>(0) / static_cast<float>(resolution)); // outer right
-	geom.uvs.emplace_back(static_cast<float>(0) / static_cast<float>(resolution), 1.0f - static_cast<float>(0) / static_cast<float>(resolution)); // inner right
-	geom.uvs.emplace_back(static_cast<float>(outerRing.size() - 1) / static_cast<float>(resolution), 1.0f - static_cast<float>(outerRing.size() - 1) / static_cast<float>(resolution)); // inner left
+	uv = static_cast<float>(outerRing.size() - 1) / static_cast<float>(resolution);
+	uv2 = static_cast<float>(0) / static_cast<float>(resolution);
 	
+	geom.uvs.emplace_back(1.0f, uv); // outer first
+	geom.uvs.emplace_back(0.0f, uv); // inner first
+	geom.uvs.emplace_back(1.0f, uv2); // outer second
+	geom.uvs.emplace_back(1.0f, uv2); // outer second
+	geom.uvs.emplace_back(0.0f, uv); // inner first
+	geom.uvs.emplace_back(0.0f, uv2); // inner second
+
 	return geom;
 }
 

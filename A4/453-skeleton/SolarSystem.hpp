@@ -82,7 +82,7 @@ private:
 
 	float mFovY = 120.0f;
 	float mZNear = 0.01f;
-	float mZFar = 100.0f;
+	float mZFar = 200.0f;
 	float mZoomSpeed = 20.0f;
 	float mRotationSpeed = 0.25f;
 
@@ -90,7 +90,15 @@ private:
 
 
 	// GUI stuff
-	const char* planetsTarget[10]{ "Sun", "Mercury", "Venus", "Earth", "Moon", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune" };
+	const char* planetsTarget[24]
+	{ 
+		"Sun", "Mercury", "Venus", "Earth", "Moon", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune",
+		"Phobos (Mars moon)", "Deimos (Mars moon)", 
+		"Ganymede (Jupiter moon)", "Callisto (Jupiter moon)", "Io (Jupiter moon)", 
+		"Titan (Saturn moon)", "Rhea (Saturn moon)", "Lapetus (Saturn moon)", 
+		"Titania (Uranus moon)", "Oberon (Uranus moon)", "Umbriel (Uranus moon)",
+		"Triton (Neptune moon)", "Proteus (Neptune moon)", "Nereid (Neptune moon)"
+	};
 	int selectedTarget = 0;
 	bool playAnimation = true;
 	bool reset = false;

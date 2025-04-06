@@ -14,7 +14,7 @@ in vec2 uvOut;
 out vec4 fragColor;
 
 void main()
-{
+{	
 	vec4 sampledColor = texture(baseColorTexture, uvOut);
 	
 	float ambientStrength = 0.5;
