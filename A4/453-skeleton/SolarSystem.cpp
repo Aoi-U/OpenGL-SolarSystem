@@ -306,11 +306,14 @@ void SolarSystem::Render()
 	// render point light
 	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const*>(&mLightModel));
 	auto pos = glGetUniformLocation(*mBasicShader, "lightColor");
-	glUniform3f(pos, 1.0f, 1.0f, 1.0f);
+	glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
+	glUniform3fv(pos, 1, reinterpret_cast<float const*>(&lightColor));
+	glm::vec3 lightPos = glm::vec3(0.0f, 0.0f, 0.0f);
 	pos = glGetUniformLocation(*mBasicShader, "lightPos");
-	glUniform3f(pos, 0.0f, 0.0f, 0.0f);
+	glUniform3fv(pos, 1, reinterpret_cast<float const*>(&lightPos));
+	glm::vec3 viewPos = mTurnTableCamera->Position();
 	pos = glGetUniformLocation(*mBasicShader, "viewPos");
-	glUniform3f(pos, mTurnTableCamera->Position().x, mTurnTableCamera->Position().y, mTurnTableCamera->Position().z);
+	glUniform3fv(pos, 1, reinterpret_cast<float const*>(&viewPos));
 	glDrawArrays(GL_POINTS, 0, 1);
 
 	// render background

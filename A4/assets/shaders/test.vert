@@ -21,5 +21,4 @@ void main()
 	Normal = mat3(transpose(inverse(model))) * inNormal;
 	outColor = inColor;
 	uvOut = uvIn;
-	Normal = inNormal;
 }
