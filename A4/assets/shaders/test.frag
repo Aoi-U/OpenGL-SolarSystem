@@ -3,12 +3,15 @@
 uniform sampler2D baseColorTexture;
 uniform sampler2D overlayColorTexture;
 
+uniform vec3 lightPos;
+
 in vec3 outColor;
 in vec2 uvOut;
+in vec3 Normal;
 out vec4 fragColor;
 
 void main()
-{
+{	
 	vec4 sampledColor = texture(baseColorTexture, uvOut);
 
 	//fragColor = vec4(outColor, 1.0f);

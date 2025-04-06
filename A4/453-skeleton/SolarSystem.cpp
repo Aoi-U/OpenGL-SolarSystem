@@ -56,6 +56,8 @@ SolarSystem::SolarSystem()
 		mPath->Get("shaders/test.frag")
 	);
 
+	
+
 	// create planets
 	// note: all planets parameters are scaled relative to 365 seconds = one earth year, or 1 second = 1 day
 	background = std::make_unique<Planet>("textures/8k_stars_milky_way.jpg", 0.0f, 85.0f, 0.0f, 0.0f, 0.0f, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
