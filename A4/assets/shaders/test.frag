@@ -10,10 +10,7 @@ out vec4 fragColor;
 void main()
 {
 	vec4 sampledColor = texture(baseColorTexture, uvOut);
-	if(sampledColor.a < 1e-4)
-	{
-		discard;// If the texture is transparent, don't draw the fragment
-	}
+
 	//fragColor = vec4(outColor, 1.0f);
 	fragColor = sampledColor;
 }

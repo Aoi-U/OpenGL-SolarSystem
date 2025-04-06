@@ -57,7 +57,7 @@ SolarSystem::SolarSystem()
 	);
 
 	// all planets initial parameters are scaled relative to 365 seconds = one earth year, or 1 second = 1 day
-	background = std::make_unique<Planet>("textures/8k_stars_milky_way.jpg", 0.0f, 50.0f, 0.0f, 0.0f, 0.0f, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
+	background = std::make_unique<Planet>("textures/8k_stars_milky_way.jpg", 0.0f, 55.0f, 0.0f, 0.0f, 0.0f, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
 
 	planets.emplace_back("textures/8k_sun.jpg", 0.0f, 1.0f, 0.0f, 13.5f, 0.0f, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
 	planets.emplace_back("textures/2k_mercury.jpg", 2.0f, 0.2f, 4.15f, 2.07f, 0.0f, 7.0f, planets[0].getPosition());
@@ -67,8 +67,8 @@ SolarSystem::SolarSystem()
 	planets.emplace_back("textures/2k_mars.jpg", 8.0f, 0.25f, 0.53f, 365.0f, 25.2f, 1.85f, planets[0].getPosition());
 	planets.emplace_back("textures/2k_jupiter.jpg", 15.0f, 5.5f, 0.08f, 884.0f, 3.1f, 0.0f, planets[0].getPosition());
 	planets.emplace_back("textures/2k_saturn.jpg", 30.0f, 4.5f, 0.03f, 819.0f, 26.73f, 2.48f, planets[0].getPosition());
-	planets.emplace_back("textures/2k_uranus.jpg", 40.0f, 2.0f, 0.01f, 515.0f, 97.77f, 0.0f, planets[0].getPosition());
-	planets.emplace_back("textures/2k_neptune.jpg", 46.0f, 2.0f, 0.006f, 544.0f, 28.0f, 1.7f, planets[0].getPosition());
+	planets.emplace_back("textures/2k_uranus.jpg", 42.0f, 2.0f, 0.01f, 515.0f, 97.77f, 0.0f, planets[0].getPosition());
+	planets.emplace_back("textures/2k_neptune.jpg", 48.0f, 2.0f, 0.006f, 544.0f, 28.0f, 1.7f, planets[0].getPosition());
 
 	mSaturnRingTexture = std::make_unique<Texture>(mPath->Get("textures/2k_saturn_ring_alpha.png"), GL_NEAREST);
 
@@ -226,6 +226,8 @@ void SolarSystem::Render()
 	mBasicShader->use();
 
 	glEnable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glFrontFace(GL_CCW);
 	glCullFace(GL_BACK);
 
@@ -265,18 +267,16 @@ void SolarSystem::Render()
 	// render saturn ring
 	mSaturnRingTexture->bind();
 	auto ringModel = planets[7].getModel();
-	ringModel = glm::scale(ringModel, glm::vec3(1.4f, 0.0f, 1.4f));
-	//ringModel = glm::rotate(ringModel, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	ringModel = glm::scale(ringModel, glm::vec3(1.3f, 0.0f, 1.3f));
 	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const*>(&ringModel));
 	mSaturnRingGeometry->bind();
 	glDrawArrays(GL_TRIANGLES, 0, mSaturnRingIndexCount);
+
+	// render the bottom side of the ring by flipping it 
 	ringModel = glm::rotate(ringModel, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	ringModel = glm::rotate(ringModel, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const*>(&ringModel));
 	mSaturnRingGeometry->bind();
 	glDrawArrays(GL_TRIANGLES, 0, mSaturnRingIndexCount);
-	
-	
 	
 	// Hint: Use glDrawElements for using the index buffer (EBO)
 
@@ -323,7 +323,7 @@ void SolarSystem::PrepareBackgroundSphereGeometry()
 void SolarSystem::PrepareSaturnRingGeometry()
 {
 	mSaturnRingGeometry = std::make_unique<GPU_Geometry>();
-	auto const saturnRing = ShapeGenerator::Ring(1.0f, 0.2f, 100);
+	auto const saturnRing = ShapeGenerator::Ring(1.0f, 0.5f, 200);
 	mSaturnRingGeometry->Update(saturnRing);
 	mSaturnRingIndexCount = static_cast<int>(saturnRing.positions.size());
 }
