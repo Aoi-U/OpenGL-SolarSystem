@@ -41,12 +41,6 @@ private:
 
 	void OnMouseWheelChange(double xOffset, double yOffset) const;
 
-	// GPU GEOMETRY AXIS FOR DEBUG
-	std::unique_ptr<GPU_Geometry> xAxisGPU{};
-	std::unique_ptr<GPU_Geometry> yAxisGPU{};
-	std::unique_ptr<GPU_Geometry> zAxisGPU{};
-	// END DEBUG
-
 	std::shared_ptr<AssetPath> mPath{};
 	std::shared_ptr<Time> mTime{};
 	std::unique_ptr<Window> mWindow;

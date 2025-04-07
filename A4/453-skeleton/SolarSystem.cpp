@@ -56,8 +56,6 @@ SolarSystem::SolarSystem()
 		mPath->Get("shaders/test.frag")
 	);
 
-	
-
 	// create planets
 	// note: all planets parameters are scaled relative to 365 seconds = one earth year, or 1 second = 1 day
 	background = std::make_unique<Planet>("textures/8k_stars_milky_way.jpg", 0.0f, 85.0f, 0.0f, 0.0f, 0.0f, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
@@ -105,41 +103,6 @@ SolarSystem::SolarSystem()
 	mLightModel = glm::mat4(1.0f);
 	mLightModel = glm::translate(mLightModel, glm::vec3(0.0f, 0.0f, 0.0f));
 	mLightModel = glm::scale(mLightModel, glm::vec3(0.2f));
-
-	// AXIS FOR DEBUG REMOVE LATER
-	CPU_Geometry xAxis{};
-	CPU_Geometry yAxis{};
-	CPU_Geometry zAxis{};
-
-	xAxis.positions.emplace_back(glm::vec3(-3.0f, 0.0f, 0.0f));
-	xAxis.positions.emplace_back(glm::vec3(3.0f, 0.0f, 0.0f));
-	xAxis.colors.emplace_back(glm::vec3(1.0f, 0.0f, 0.0f));
-	xAxis.colors.emplace_back(glm::vec3(1.0f, 0.0f, 0.0f));
-	xAxis.normals.emplace_back(glm::vec3(1.0f, 0.0f, 0.0f));
-	xAxis.normals.emplace_back(glm::vec3(1.0f, 0.0f, 0.0f));
-	
-	yAxis.positions.emplace_back(glm::vec3(0.0f, -3.0f, 0.0f));
-	yAxis.positions.emplace_back(glm::vec3(0.0f, 3.0f, 0.0f));
-	yAxis.colors.emplace_back(glm::vec3(0.0f, 3.0f, 0.0f));
-	yAxis.colors.emplace_back(glm::vec3(0.0f, 3.0f, 0.0f));
-	yAxis.normals.emplace_back(glm::vec3(0.0f, 1.0f, 0.0f));
-	yAxis.normals.emplace_back(glm::vec3(0.0f, 1.0f, 0.0f));
-	
-	zAxis.positions.emplace_back(glm::vec3(0.0f, 0.0f, -3.0f));
-	zAxis.positions.emplace_back(glm::vec3(0.0f, 0.0f, 3.0f));
-	zAxis.colors.emplace_back(glm::vec3(0.0f, 0.0f, 1.0f));
-	zAxis.colors.emplace_back(glm::vec3(0.0f, 0.0f, 1.0f));
-	zAxis.normals.emplace_back(glm::vec3(0.0f, 0.0f, 1.0f));
-	zAxis.normals.emplace_back(glm::vec3(0.0f, 0.0f, 1.0f));
-	
-	xAxisGPU = std::make_unique<GPU_Geometry>();
-	yAxisGPU = std::make_unique<GPU_Geometry>();
-	zAxisGPU = std::make_unique<GPU_Geometry>();
-
-	xAxisGPU->Update(xAxis);
-	yAxisGPU->Update(yAxis);
-	zAxisGPU->Update(zAxis);
-	// DEBUG END HERE
 }
 
 //======================================================================================================================
@@ -303,43 +266,30 @@ void SolarSystem::Render()
 	auto const view = mTurnTableCamera->ViewMatrix();
 	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "view"), 1, GL_FALSE, reinterpret_cast<float const*>(&view));
 
-	// render point light
-	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const*>(&mLightModel));
-	auto pos = glGetUniformLocation(*mBasicShader, "lightColor");
-	glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
-	glUniform3fv(pos, 1, reinterpret_cast<float const*>(&lightColor));
-	glm::vec3 lightPos = glm::vec3(0.0f, 0.0f, 0.0f);
-	pos = glGetUniformLocation(*mBasicShader, "lightPos");
-	glUniform3fv(pos, 1, reinterpret_cast<float const*>(&lightPos));
-	glm::vec3 viewPos = mTurnTableCamera->Position();
-	pos = glGetUniformLocation(*mBasicShader, "viewPos");
-	glUniform3fv(pos, 1, reinterpret_cast<float const*>(&viewPos));
-	glDrawArrays(GL_POINTS, 0, 1);
-
 	// render background
 	background->getTexture()->bind();
-	auto const model = background->getModel();
-	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const*>(&model));
+	auto const bgModel = background->getModel();
+	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const*>(&bgModel));
 	mBackgroundSphereGeometry->bind();
 	glDrawArrays(GL_TRIANGLES, 0, mBackgroundSphereIndexCount);
 
+	// render sun 
+	planets[0].getTexture()->bind();
+	auto const sunModel = planets[0].getModel();
+	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const*>(&sunModel));
+	glUniform1i(glGetUniformLocation(*mBasicShader, "isSun"), 1);
+	mUnitSphereGeometry->bind();
+	glDrawArrays(GL_TRIANGLES, 0, mUnitSphereIndexCount);
+
 	// render planets
-	for (Planet& planet : planets)
+	for (size_t i = 1; i < planets.size(); i++)
 	{
-		planet.getTexture()->bind();
-		auto const model = planet.getModel();
+		planets[i].getTexture()->bind();
+		auto const model = planets[i].getModel();
 		glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const*>(&model));
+		glUniform1i(glGetUniformLocation(*mBasicShader, "isSun"), 0);
 		mUnitSphereGeometry->bind();
 		glDrawArrays(GL_TRIANGLES, 0, mUnitSphereIndexCount);
-
-		// DEBUG AXIS LINES
-		xAxisGPU->bind();
-		glDrawArrays(GL_LINES, 0, 2);
-		yAxisGPU->bind();
-		glDrawArrays(GL_LINES, 0, 2);
-		zAxisGPU->bind();
-		glDrawArrays(GL_LINES, 0, 2);
-		// END DEBUG
 	}
 
 	// render saturn ring
@@ -354,7 +304,17 @@ void SolarSystem::Render()
 	ringModel = glm::rotate(ringModel, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const*>(&ringModel));
 	mSaturnRingGeometry->bind();
-	glDrawArrays(GL_TRIANGLES, 0, mSaturnRingIndexCount);
+	glDrawArrays(GL_TRIANGLES, 0, mSaturnRingIndexCount);	
+
+	// render point light
+	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const*>(&mLightModel));
+	glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
+	glUniform3fv(glGetUniformLocation(*mBasicShader, "lightColor"), 1, reinterpret_cast<float const*>(&lightColor));
+	glm::vec3 lightPos = glm::vec3(0.0f, 0.0f, 0.0f);
+	glUniform3fv(glGetUniformLocation(*mBasicShader, "lightPos"), 1, reinterpret_cast<float const*>(&lightPos));
+	glm::vec3 viewPos = mTurnTableCamera->Position();
+	glUniform3fv(glGetUniformLocation(*mBasicShader, "viewPos"), 1, reinterpret_cast<float const*>(&viewPos));
+	glDrawArrays(GL_POINTS, 0, 1);
 	
 	// Hint: Use glDrawElements for using the index buffer (EBO)
 
