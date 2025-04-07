@@ -6,12 +6,12 @@ namespace ShapeGenerator
 {
 	// TODO
 	 [[nodiscard]]
-	CPU_Geometry Sphere(float radius, int slices, int stacks); // creates a sphere cpu geometry by triangulating a generated sphere
+	CPU_Geometry Sphere(float radius, int slices, int stacks); // creates a sphere cpu geometry 
 
 	// does the same as Sphere() but in opposite winding order so the textures can properly load on the inside of the sphere
 	CPU_Geometry BackgroundSphere(float radius, int slices, int stacks); 
 
-	CPU_Geometry Ring(float radius, float width, int resolution);
+	CPU_Geometry Ring(float radius, float width, int resolution); // creates a ring cpu geometry 
 
 	CPU_Geometry UnitCube();
 

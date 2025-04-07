@@ -23,7 +23,7 @@ private:
 
 	void Update(float deltaTime);
 
-	void UpdatePlanets(float deltaTime);
+	void UpdatePlanets(float time); // updates planets/moons, clouds and saturn ring
 
 	void ResetDefaults();
 
@@ -31,11 +31,11 @@ private:
 
 	void UI();
 
-	void PrepareUnitSphereGeometry();
+	void PrepareUnitSphereGeometry(); // creates a unit sphere geometry for the planets/moons
 
-	void PrepareBackgroundSphereGeometry();
+	void PrepareBackgroundSphereGeometry(); // creates a sphere with opposite triangle winding 
 
-	void PrepareSaturnRingGeometry();
+	void PrepareSaturnRingGeometry(); // creates ring geometry for saturn
 
 	void OnResize(int width, int height);
 
@@ -47,9 +47,8 @@ private:
 	std::shared_ptr<InputManager> mInputManager{};
 
 	std::unique_ptr<ShaderProgram> mBasicShader{};
-	std::unique_ptr<Texture> mTexture{};
 
-	glm::mat4 mLightModel;
+	glm::mat4 mLightModel; // lights model matrix
 
 	std::unique_ptr<GPU_Geometry> mUnitSphereGeometry{};
 	int mUnitSphereIndexCount{};
@@ -57,16 +56,15 @@ private:
 	std::unique_ptr<GPU_Geometry> mBackgroundSphereGeometry{};
 	int mBackgroundSphereIndexCount{};
 
-	std::unique_ptr<Planet> background{};
+	std::unique_ptr<Planet> background{}; // background planet
+	std::unique_ptr<Planet> mClouds{}; // clouds planet
 
-	std::vector<Planet> planets{};
+	std::vector<Planet> planets{}; // list of planets (including moons)
 
+	// saturn ring geometry and textures
 	std::unique_ptr<Texture> mSaturnRingTexture{};
 	std::unique_ptr<GPU_Geometry> mSaturnRingGeometry{};
 	int mSaturnRingIndexCount{};
-	//std::unique_ptr<Planet> sun{};
-	//std::unique_ptr<Planet> earth{};
-	//std::unique_ptr<Planet> moon{};
 
 	std::unique_ptr<TurnTableCamera> mTurnTableCamera{};
 	glm::dvec2 mPreviousCursorPosition{};
@@ -82,7 +80,6 @@ private:
 
 	float prevTime = 0.0f;
 
-
 	// GUI stuff
 	const char* planetsTarget[24]
 	{ 
@@ -97,4 +94,5 @@ private:
 	bool playAnimation = true;
 	bool reset = false;
 	float timeScale = 1.0f;
+	bool enableClouds = false;
 };

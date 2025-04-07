@@ -57,7 +57,7 @@ SolarSystem::SolarSystem()
 	);
 
 	// create planets
-	// note: all planets parameters are scaled relative to 365 seconds = one earth year, or 1 second = 1 day
+	// all planets parameters are scaled relative to 365 seconds = one earth year, or 1 second = 1 day
 	background = std::make_unique<Planet>("textures/8k_stars_milky_way.jpg", 0.0f, 85.0f, 0.0f, 0.0f, 0.0f, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f));
 
 	planets.emplace_back("textures/2k_sun.jpg", 0.0f, 1.5f, 0.0f, 13.5f, 0.0f, 0.0f, glm::vec3(0.0f, 0.0f, 0.0f)); // sun
@@ -97,6 +97,7 @@ SolarSystem::SolarSystem()
 	planets.emplace_back("textures/2k_moon.jpg", 30.0f, 0.01f, 1.01f, 1.01f, 0.0f, 7.0f, planets[9].getPosition()); // nereid
 
 	mSaturnRingTexture = std::make_unique<Texture>(mPath->Get("textures/2k_saturn_ring_alpha.png"), GL_NEAREST);
+	mClouds = std::make_unique<Planet>("textures/2k_earth_clouds.jpg", 0.0f, 0.501f, 1.0f, 150.0f, 0.0f, 0.0f, planets[3].getPosition()); // earth
 
 	mTurnTableCamera = std::make_unique<TurnTableCamera>(planets[0].getModel());
 
@@ -198,37 +199,41 @@ void SolarSystem::UpdatePlanets(float time)
 	for (size_t i = 0; i < planets.size(); i++)
 	{
 		switch (i) {
-		case 4:
+		case 4: // earths moon
 			planets[i].updateCenterOfOrbit(planets[3].getPosition()); // update moons center of orbit to earth
 			break;
-		case 10:
+		case 10: // mars moons
 			planets[i].updateCenterOfOrbit(planets[5].getPosition()); // update phobos center of orbit to mars
 			planets[i + 1].updateCenterOfOrbit(planets[5].getPosition()); // update deimos center of orbit to mars
 			break;
-		case 12:
+		case 12: // jupiter moons
 			planets[i].updateCenterOfOrbit(planets[6].getPosition()); // update ganymede center of orbit to jupiter
 			planets[i + 1].updateCenterOfOrbit(planets[6].getPosition()); // update callisto center of orbit to jupiter
 			planets[i + 2].updateCenterOfOrbit(planets[6].getPosition()); // update io center of orbit to jupiter
 			break;
-		case 15:
+		case 15: // saturn moons
 			planets[i].updateCenterOfOrbit(planets[7].getPosition()); // update titan center of orbit to saturn
 			planets[i + 1].updateCenterOfOrbit(planets[7].getPosition()); // update rhea center of orbit to saturn
 			planets[i + 2].updateCenterOfOrbit(planets[7].getPosition()); // update lapetus center of orbit to saturn
 			break;
-		case 18:
+		case 18: // uranus moons
 			planets[i].updateCenterOfOrbit(planets[8].getPosition()); // update titania center of orbit to uranus
 			planets[i + 1].updateCenterOfOrbit(planets[8].getPosition()); // update oberon center of orbit to uranus
 			planets[i + 2].updateCenterOfOrbit(planets[8].getPosition()); // update umbriel center of orbit to uranus
 			break;
-		case 21:
+		case 21: // neptune moons
 			planets[i].updateCenterOfOrbit(planets[9].getPosition()); // update triton center of orbit to neptune
 			planets[i + 1].updateCenterOfOrbit(planets[9].getPosition()); // update proteus center of orbit to neptune
 			planets[i + 2].updateCenterOfOrbit(planets[9].getPosition()); // update nereid center of orbit to neptune
 			break;
 		}
 
-		planets[i].update(time); // update all planets
+		planets[i].update(time); // update all planets and moons
 	}
+
+	// update the clouds position to earth
+	mClouds->updateCenterOfOrbit(planets[3].getPosition());
+	mClouds->update(time); // update clouds position
 }
 
 // resets the simulation
@@ -239,8 +244,16 @@ void SolarSystem::ResetDefaults()
 	{
 		planet.Reset();
 	}
+	// reset clouds
+	mClouds->Reset();
 	UpdatePlanets(0.0f);
+
+	// reset gui stuff
 	selectedTarget = 0;
+	playAnimation = true;
+	reset = false;
+	timeScale = 1.0f;
+	enableClouds = false;
 
 	// reset camera
 	mTurnTableCamera->Reset();
@@ -254,8 +267,7 @@ void SolarSystem::Render()
 	mBasicShader->use();
 
 	glEnable(GL_CULL_FACE);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_BLEND); // enable blending for transparent textures
 	glFrontFace(GL_CCW);
 	glCullFace(GL_BACK);
 
@@ -277,7 +289,7 @@ void SolarSystem::Render()
 	planets[0].getTexture()->bind();
 	auto const sunModel = planets[0].getModel();
 	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const*>(&sunModel));
-	glUniform1i(glGetUniformLocation(*mBasicShader, "isSun"), 1);
+	glUniform1i(glGetUniformLocation(*mBasicShader, "noShade"), 1); // disable shading for the sun
 	mUnitSphereGeometry->bind();
 	glDrawArrays(GL_TRIANGLES, 0, mUnitSphereIndexCount);
 
@@ -287,8 +299,20 @@ void SolarSystem::Render()
 		planets[i].getTexture()->bind();
 		auto const model = planets[i].getModel();
 		glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const*>(&model));
-		glUniform1i(glGetUniformLocation(*mBasicShader, "isSun"), 0);
+		glUniform1i(glGetUniformLocation(*mBasicShader, "noShade"), 0);
 		mUnitSphereGeometry->bind();
+		glDrawArrays(GL_TRIANGLES, 0, mUnitSphereIndexCount);
+	}
+
+	if (enableClouds)
+	{
+		// render earths clouds
+		mClouds->getTexture()->bind();
+		auto cloudModel = mClouds->getModel();
+		glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const*>(&cloudModel));
+		glUniform1i(glGetUniformLocation(*mBasicShader, "noShade"), 1); // disable shading for the clouds
+		mUnitSphereGeometry->bind();
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 		glDrawArrays(GL_TRIANGLES, 0, mUnitSphereIndexCount);
 	}
 
@@ -297,7 +321,9 @@ void SolarSystem::Render()
 	auto ringModel = planets[7].getModel();
 	ringModel = glm::scale(ringModel, glm::vec3(1.3f, 0.0f, 1.3f));
 	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const*>(&ringModel));
+	glUniform1i(glGetUniformLocation(*mBasicShader, "noShade"), 0);
 	mSaturnRingGeometry->bind();
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDrawArrays(GL_TRIANGLES, 0, mSaturnRingIndexCount);
 
 	// render the bottom side of the ring by flipping it 
@@ -309,10 +335,10 @@ void SolarSystem::Render()
 	// render point light
 	glUniformMatrix4fv(glGetUniformLocation(*mBasicShader, "model"), 1, GL_FALSE, reinterpret_cast<float const*>(&mLightModel));
 	glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
-	glUniform3fv(glGetUniformLocation(*mBasicShader, "lightColor"), 1, reinterpret_cast<float const*>(&lightColor));
 	glm::vec3 lightPos = glm::vec3(0.0f, 0.0f, 0.0f);
-	glUniform3fv(glGetUniformLocation(*mBasicShader, "lightPos"), 1, reinterpret_cast<float const*>(&lightPos));
 	glm::vec3 viewPos = mTurnTableCamera->Position();
+	glUniform3fv(glGetUniformLocation(*mBasicShader, "lightColor"), 1, reinterpret_cast<float const*>(&lightColor));
+	glUniform3fv(glGetUniformLocation(*mBasicShader, "lightPos"), 1, reinterpret_cast<float const*>(&lightPos));
 	glUniform3fv(glGetUniformLocation(*mBasicShader, "viewPos"), 1, reinterpret_cast<float const*>(&viewPos));
 	glDrawArrays(GL_POINTS, 0, 1);
 	
@@ -338,7 +364,10 @@ void SolarSystem::UI()
 	reset = ImGui::Button("Reset animation");
 
 	// time scaling slider
-	ImGui::SliderFloat("Time scale", &timeScale, 0.001f, 50.0f);
+	ImGui::SliderFloat("Time scale", &timeScale, 0.0f, 50.0f); // time scale slider
+
+	// enable/disable clouds
+	ImGui::Checkbox("Show clouds", &enableClouds);
 	ImGui::End();
 
 }

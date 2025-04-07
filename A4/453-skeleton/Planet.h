@@ -27,24 +27,17 @@ private:
 	glm::mat4 mModel; // model matrix
 
 public:
-	int orbitCount = 0;
-	int rotationCount = 0;
 	Planet(std::string const& texture, float orbitRadius, float scale, float orbitSpeed, float rotationSpeed, float tilt, float inclination, glm::vec3 centerOfOrbit);
 
-	void updateCenterOfOrbit(glm::vec3 center) { mCenterOfOrbit = center; }
+	void updateCenterOfOrbit(glm::vec3 center) { mCenterOfOrbit = center; } // update the center of orbit (used for moons, orbiting relative to a planet)
 	
-	Texture* getTexture() const { return mTexture.get(); }
+	Texture* getTexture() const { return mTexture.get(); } // returns the texture of the planet
 
-	glm::mat4& getModel() { return mModel; }
+	glm::mat4& getModel() { return mModel; } // returns the model matrix of the planet
 
-	glm::vec3 getPosition() const { return mModel[3]; }
+	glm::vec3 getPosition() const { return mModel[3]; } // returns the position of the planet
 
-	float getRotation() const { return currentRotation; }
-	float getCurrentOrbit() const { return currentOrbit; }
-	float getCurrentRotation() const { return currentRotation; }
-	glm::vec3 getCenterOfOrbit() const { return mCenterOfOrbit; }
-
-	void update(float deltaTime);
-	void Reset();
+	void update(float deltaTime); // updates the model matrix of the planet
+	void Reset(); // resets the planet to its default position
 };
 
