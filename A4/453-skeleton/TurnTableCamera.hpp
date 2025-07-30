@@ -20,8 +20,6 @@ public:
 		float maxDistance = 30.0f;
 	};
 
-	// For the bonus camera needs to be able to follow a target
-
 	// Angles are in radians
 	explicit TurnTableCamera(Transform& target);
 
